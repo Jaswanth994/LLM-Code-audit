@@ -1,0 +1,90 @@
+/* Global Body Styling */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a1a;  /* Full-page dark background */
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Container */
+  .about-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;  /* Ensure it spans full width */
+    padding: 24px;
+  }
+  
+  /* Content Area */
+  .about-content {
+    max-width: 800px;
+    text-align: center;
+  }
+  
+  /* Title & Description */
+  .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #60a5fa;
+  }
+  
+  .description {
+    font-size: 1.125rem;
+    color: #d1d5db;
+    line-height: 1.75;
+  }
+  
+  .highlight {
+    color: #93c5fd;
+    font-weight: 600;
+  }
+  
+  /* Feature Cards */
+  .features {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 32px;
+  }
+  
+  .feature-card {
+    background-color: #2d2d2d;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  
+  .feature-card h3 {
+    font-size: 1.25rem;
+    color: #60a5fa;
+    margin-bottom: 8px;
+  }
+  
+  .feature-card p {
+    color: #d1d5db;
+  }
+  
+  /* Button */
+  .button-container {
+    margin-top: 32px;
+  }
+  
+  .learn-more {
+    background-color: #3b82f6;
+    border: none;
+    color: #ffffff;
+    font-size: 1.125rem;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .learn-more:hover {
+    background-color: #2563eb;
+  }
+  
