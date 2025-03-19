@@ -1,0 +1,35 @@
+/* src/index.css */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9fafb;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+textarea, button {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  margin-top: 8px;
+}
+
+button {
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.bg-green-100 {
+  background-color: #d4edda;
+}
+
+.bg-gray-100 {
+  background-color: #f8f9fa;
+}
