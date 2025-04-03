@@ -28,20 +28,25 @@ nav {
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 2rem;
-  background-color: #1a1a1a;
+  background-color: black;
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease;
 }
 
 nav:hover {
-  background-color: orange; /* Change to your preferred hover color */
+  background-color: wheat; /* Change to your preferred hover color */
 }
 
+/* Navbar Website Name */
+.navbar-title {
+  font-size: 10rem; /* Adjust font size as needed */
+  font-weight: 1000; /* Bold */
+}
 nav a {
   color: white;
   text-decoration: none;
-  margin-left: 1.5rem;
+  margin-left: 3rem;
   font-weight: 500;
   transition: color 0.3s ease;
 }
@@ -193,4 +198,57 @@ nav a:hover {
 
 .analyze-button:hover {
   background-color: var(--primary-hover-color);
+}
+
+/* About Us Page Styles */
+.about-us-section {
+  background: linear-gradient(135deg, #f0f4ff, #f9fafb);
+}
+
+.about-us-section h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.about-us-section p {
+  font-size: 1.125rem;
+  color: #4a5568;
+}
+
+.about-us-section .card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-us-section .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.about-us-section .card h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.about-us-section .card p {
+  font-size: 1rem;
+  color: #4a5568;
+}
+
+.about-us-section .learn-more-button {
+  background: #4f46e5;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.about-us-section .learn-more-button:hover {
+  background: #4338ca;
 }
