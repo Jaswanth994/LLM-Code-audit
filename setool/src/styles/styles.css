@@ -1,0 +1,43 @@
+.results {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.code-block {
+  background-color: #f8f8f8;
+  padding: 1rem;
+  border-radius: 8px;
+  position: relative;
+  border: 1px solid #ccc;
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.code-header h3 {
+  margin: 0;
+}
+
+.code-block button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.code-block pre {
+  background-color: #fff;
+  padding: 0.5rem;
+  overflow-x: auto;
+  border-radius: 4px;
+  font-family: monospace;
+}
