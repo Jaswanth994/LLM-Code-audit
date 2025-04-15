@@ -1,0 +1,59 @@
+/* src/styles/HomePage.css */
+.home-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .home-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .prompt-container {
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .prompt-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .prompt-input {
+    width: 100%;
+    padding: 1.5rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 1rem;
+    resize: none;
+    min-height: 200px;
+    transition: border-color 0.3s;
+  }
+  
+  .prompt-input:focus {
+    border-color: #3498db;
+    outline: none;
+  }
+  
+  .submit-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    align-self: center;
+  }
+  
+  .submit-btn:hover {
+    background-color: #2980b9;
+  }
