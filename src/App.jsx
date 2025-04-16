@@ -17,7 +17,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomePage user={user} />} />
+        <Route path="/" element={<HomePage />} />
         <Route 
           path="/dashboard" 
           element={user ? <Dashboard /> : <Navigate to="/auth" />} 

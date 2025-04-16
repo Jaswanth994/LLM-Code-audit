@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { auth } from "../firebaseConfig";
@@ -8,6 +9,47 @@ import { getDeepSeekResponse } from "../api/deepseekService";
 import { getGeminiResponse } from "../api/geminiService";
 import Header from "../components/Header";
 import "../styles/dashboard.css";
+
+const analyzeCode = (code) => {
+  if (!code || typeof code !== 'string') {
+    return {
+      readability: 0,
+      complexity: 0,
+      technicalDebt: 0,
+      issues: []
+    };
+  }
+
+  // Simple analysis (in a real app, you'd use proper code analysis tools)
+  const lines = code.split('\n').length;
+  const charCount = code.length;
+  const commentCount = (code.match(/\/\/|\/\*|\*\//g) || []).length;
+  
+  // Calculate metrics (simplified for demo)
+  const readability = Math.min(100, Math.max(0, 
+    80 - (lines / 50) - (charCount / lines / 100) + (commentCount * 2)
+  ));
+  
+  const complexity = Math.min(100, Math.max(0, 
+    (lines / 20) + (code.match(/\bif\b|\bfor\b|\bwhile\b/g) || []).length * 5
+  ));
+  
+  const technicalDebt = Math.min(100, Math.max(0, 
+    complexity * 0.7 - readability * 0.3
+  ));
+  
+  const issues = [];
+  if (lines > 100) issues.push("Long method/function");
+  if (complexity > 70) issues.push("High complexity");
+  if (readability < 50) issues.push("Low readability");
+  
+  return {
+    readability: Math.round(readability),
+    complexity: Math.round(complexity),
+    technicalDebt: Math.round(technicalDebt),
+    issues
+  };
+};
 
 const Dashboard = () => {
   const location = useLocation();
@@ -25,8 +67,8 @@ const Dashboard = () => {
     gemini: true,
   });
   const [error, setError] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
 
-  // Authentication check
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
@@ -36,7 +78,6 @@ const Dashboard = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // Handle initial prompt from URL
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const prompt = searchParams.get("prompt");
@@ -52,6 +93,35 @@ const Dashboard = () => {
     }
   }, [location]);
 
+  const analyzeResponses = () => {
+    const analysisResults = {};
+    Object.keys(responses).forEach(model => {
+      if (responses[model]) {
+        analysisResults[model] = analyzeCode(responses[model]);
+      }
+    });
+    setAnalysis(analysisResults);
+    
+    // Determine best model
+    if (Object.keys(analysisResults).length > 0) {
+      const models = Object.keys(analysisResults);
+      const bestModel = models.reduce((best, current) => {
+        const currentScore = analysisResults[current].readability * 0.5 - 
+                           analysisResults[current].complexity * 0.3 - 
+                           analysisResults[current].technicalDebt * 0.2;
+        const bestScore = analysisResults[best].readability * 0.5 - 
+                         analysisResults[best].complexity * 0.3 - 
+                         analysisResults[best].technicalDebt * 0.2;
+        return currentScore > bestScore ? current : best;
+      }, models[0]);
+      
+      setAnalysis(prev => ({
+        ...prev,
+        bestModel
+      }));
+    }
+  };
+
   const handleQuerySubmit = async (prompt, modelsToUse = selectedModels) => {
     if (!prompt.trim()) {
       setError("Please enter a valid prompt");
@@ -60,6 +130,7 @@ const Dashboard = () => {
 
     setLoading(true);
     setError(null);
+    setAnalysis(null);
     
     try {
       const requests = [];
@@ -94,6 +165,7 @@ const Dashboard = () => {
       });
       
       setResponses(newResponses);
+      analyzeResponses();
     } catch (err) {
       setError(`Failed to get responses: ${err.message}`);
     } finally {
@@ -142,10 +214,85 @@ const Dashboard = () => {
             <p>Generating responses...</p>
           </div>
         ) : (
-          <ResultsDisplay 
-            responses={responses} 
-            selectedModels={selectedModels} 
-          />
+          <>
+            <ResultsDisplay 
+              responses={responses} 
+              selectedModels={selectedModels} 
+            />
+            
+            {analysis && (
+              <div className="analysis-results">
+                <h2>Code Quality Analysis</h2>
+                
+                <div className="metrics-grid">
+                  {Object.entries(analysis).map(([model, data]) => {
+                    if (model === 'bestModel') return null;
+                    if (!responses[model]) return null;
+                    
+                    return (
+                      <div key={model} className="metric-card">
+                        <h3>{model.charAt(0).toUpperCase() + model.slice(1)}</h3>
+                        
+                        <div className="metric">
+                          <label>Readability:</label>
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-fill" 
+                              style={{ width: `${data.readability}%` }}
+                            ></div>
+                            <span>{data.readability}/100</span>
+                          </div>
+                        </div>
+                        
+                        <div className="metric">
+                          <label>Complexity:</label>
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-fill complexity" 
+                              style={{ width: `${data.complexity}%` }}
+                            ></div>
+                            <span>{data.complexity}/100</span>
+                          </div>
+                        </div>
+                        
+                        <div className="metric">
+                          <label>Technical Debt:</label>
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-fill debt" 
+                              style={{ width: `${data.technicalDebt}%` }}
+                            ></div>
+                            <span>{data.technicalDebt}/100</span>
+                          </div>
+                        </div>
+                        
+                        {data.issues.length > 0 && (
+                          <div className="issues">
+                            <label>Potential Issues:</label>
+                            <ul>
+                              {data.issues.map((issue, i) => (
+                                <li key={i}>{issue}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {analysis.bestModel && (
+                  <div className="best-model">
+                    <h3>Best Model: {analysis.bestModel.charAt(0).toUpperCase() + analysis.bestModel.slice(1)}</h3>
+                    <p>
+                      This model scored highest in our analysis considering readability, 
+                      complexity, and technical debt factors.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

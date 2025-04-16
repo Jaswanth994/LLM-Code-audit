@@ -72,7 +72,7 @@ const AuthModal = ({ type, onClose, switchAuthType }) => {
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
+                {showPassword ? '👁' : '👁'}
               </span>
             </div>
           </div>
@@ -84,9 +84,9 @@ const AuthModal = ({ type, onClose, switchAuthType }) => {
 
         <div className="auth-switch">
           {type === 'login' ? (
-            <p>Don't have an account? <button onClick={switchAuthType}>Sign up</button></p>
+            <p>Don't have an account? <button type="button" onClick={() => switchAuthType('signup')}>Sign up</button></p>
           ) : (
-            <p>Already have an account? <button onClick={switchAuthType}>Login</button></p>
+            <p>Already have an account? <button type="button" onClick={() => switchAuthType('login')}>Login</button></p>
           )}
         </div>
       </div>

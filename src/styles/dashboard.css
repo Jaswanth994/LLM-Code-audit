@@ -73,3 +73,129 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+/* Add to dashboard.css */
+.analysis-results {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+}
+
+.analysis-results h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #2c3e50;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.metric-card h3 {
+  margin-top: 0;
+  color: #3498db;
+  text-align: center;
+}
+
+.metric {
+  margin-bottom: 1rem;
+}
+
+.metric label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.progress-bar {
+  height: 24px;
+  background: #e0e0e0;
+  border-radius: 12px;
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 12px;
+  background: #2ecc71;
+  transition: width 0.5s ease;
+}
+
+.progress-fill.complexity {
+  background: #e74c3c;
+}
+
+.progress-fill.debt {
+  background: #f39c12;
+}
+
+.progress-bar span {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.issues {
+  margin-top: 1rem;
+}
+
+.issues label {
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.issues ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.issues li {
+  margin-bottom: 0.3rem;
+}
+
+.best-model {
+  background: #e8f4fc;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #3498db;
+}
+
+.best-model h3 {
+  color: #2c3e50;
+  margin-top: 0;
+}
+
+.analyze-btn {
+  display: block;
+  margin: 2rem auto 0;
+  padding: 0.75rem 2rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.analyze-btn:hover {
+  background-color: #2980b9;
+}
