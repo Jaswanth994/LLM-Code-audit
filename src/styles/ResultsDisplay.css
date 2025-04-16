@@ -1,0 +1,83 @@
+/* Add to your CSS file */
+.code-block {
+    background: #f8f8f8;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #ddd;
+  }
+  
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+  }
+  
+  .code-header h3 {
+    margin: 0;
+    color: #2c3e50;
+  }
+  
+  .code-header button {
+    background: #e0e0e0;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  
+  .metrics-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    background: #fff;
+    padding: 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #eee;
+  }
+  
+  .metric {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+  }
+  
+  .metric span:first-child {
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 0.2rem;
+  }
+  
+  .metric span:last-child {
+    font-family: monospace;
+    color: #2c3e50;
+  }
+  
+  pre {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0;
+    border: 1px solid #eee;
+  }
+  
+  .analyze-btn {
+    display: block;
+    margin: 2rem auto 0;
+    padding: 0.8rem 2rem;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .analyze-btn:hover {
+    background: #2980b9;
+  }

@@ -9,6 +9,8 @@ import { getDeepSeekResponse } from "../api/deepseekService";
 import { getGeminiResponse } from "../api/geminiService";
 import Header from "../components/Header";
 import "../styles/dashboard.css";
+import { useAuthState } from 'react-firebase-hooks/auth';
+
 
 const analyzeCode = (code) => {
   if (!code || typeof code !== 'string') {
@@ -53,6 +55,7 @@ const analyzeCode = (code) => {
 
 const Dashboard = () => {
   const location = useLocation();
+  const [user] = useAuthState(auth);
   const navigate = useNavigate();
   const [responses, setResponses] = useState({
     chatgpt: "",
@@ -175,7 +178,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <Header />
+      <Header user={user} /> 
       
       <main className="dashboard-content">
         <h1 className="dashboard-title">LLM Code Analysis Dashboard</h1>

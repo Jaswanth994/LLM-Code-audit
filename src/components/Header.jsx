@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../firebaseConfig';
@@ -22,20 +21,16 @@ const Header = ({ user }) => {
         <h1 className="logo">LLM Code Audit</h1>
         <nav className="nav-links">
           <Link to="/">Home</Link>
-          {user && <Link to="/dashboard">Dashboard</Link>}
           <Link to="/about">About</Link>
           {user ? (
-            <button onClick={handleLogout} className="auth-button">
-              Logout
-            </button>
+            <>
+              <Link to="/dashboard">Dashboard</Link>
+              <button onClick={handleLogout} className="auth-button">Logout</button>
+            </>
           ) : (
             <>
-              <Link to="/auth" className="auth-button">
-                Login
-              </Link>
-              <Link to="/auth?type=signup" className="auth-button">
-                Signup
-              </Link>
+              <Link to="/auth" className="auth-button">Login</Link>
+              <Link to="/auth?type=signup" className="auth-button">Signup</Link>
             </>
           )}
         </nav>

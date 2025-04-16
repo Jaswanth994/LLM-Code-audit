@@ -1,4 +1,3 @@
-// src/pages/HomePage.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -11,9 +10,13 @@ const HomePage = ({ user }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!prompt.trim()) return;
-    
+
     if (!user) {
-      navigate('/auth', { state: { from: { pathname: '/dashboard', search: `?prompt=${encodeURIComponent(prompt)}` } } });
+      navigate('/auth', {
+        state: {
+          from: { pathname: '/dashboard', search: `?prompt=${encodeURIComponent(prompt)}` },
+        },
+      });
       return;
     }
 
@@ -23,7 +26,7 @@ const HomePage = ({ user }) => {
   return (
     <div className="home-container">
       <Header user={user} />
-      
+
       <main className="home-content">
         <div className="prompt-container">
           <h2>Compare LLM Code Generations</h2>
