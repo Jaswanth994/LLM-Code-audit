@@ -70,7 +70,7 @@ const Dashboard = () => {
     gemini: true,
   });
   const [error, setError] = useState(null);
-  const [analysis, setAnalysis] = useState(null);
+  const [analysis, setAnalysis] = useState();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -177,129 +177,57 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="dashboard-container">
-      <Header user={user} /> 
+  <div className="dashboard-container">
+    <Header user={user} /> 
+    
+    <main className="dashboard-content">
+      <h1 className="dashboard-title">LLM Code Analysis Dashboard</h1>
       
-      <main className="dashboard-content">
-        <h1 className="dashboard-title">LLM Code Analysis Dashboard</h1>
-        
-        <div className="query-section">
-          <QueryInput 
-            onSubmit={handleQuerySubmit}
-            isLoading={loading}
-            initialValue={initialPrompt}
+      <div className="query-section">
+        <QueryInput 
+          onSubmit={handleQuerySubmit}
+          isLoading={loading}
+          initialValue={initialPrompt}
+        />
+        {error && <p className="error-message">{error}</p>}
+      </div>
+
+      <div className="model-selection">
+        <h3>Select Models to Compare:</h3>
+        <div className="model-checkboxes">
+          {Object.entries(selectedModels).map(([model, isSelected]) => (
+            <label key={model} className="model-checkbox">
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => setSelectedModels(prev => ({
+                  ...prev,
+                  [model]: !prev[model]
+                }))}
+              />
+              {model.charAt(0).toUpperCase() + model.slice(1)}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="loading-indicator">
+          <div className="spinner"></div>
+          <p>Generating responses...</p>
+        </div>
+      ) : (
+        <>
+          <ResultsDisplay 
+            responses={responses} 
+            selectedModels={selectedModels} 
+            analysis={analysis}
           />
-          {error && <p className="error-message">{error}</p>}
-        </div>
-
-        <div className="model-selection">
-          <h3>Select Models to Compare:</h3>
-          <div className="model-checkboxes">
-            {Object.entries(selectedModels).map(([model, isSelected]) => (
-              <label key={model} className="model-checkbox">
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => setSelectedModels(prev => ({
-                    ...prev,
-                    [model]: !prev[model]
-                  }))}
-                />
-                {model.charAt(0).toUpperCase() + model.slice(1)}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="loading-indicator">
-            <div className="spinner"></div>
-            <p>Generating responses...</p>
-          </div>
-        ) : (
-          <>
-            <ResultsDisplay 
-              responses={responses} 
-              selectedModels={selectedModels} 
-            />
-            
-            {analysis && (
-              <div className="analysis-results">
-                <h2>Code Quality Analysis</h2>
-                
-                <div className="metrics-grid">
-                  {Object.entries(analysis).map(([model, data]) => {
-                    if (model === 'bestModel') return null;
-                    if (!responses[model]) return null;
-                    
-                    return (
-                      <div key={model} className="metric-card">
-                        <h3>{model.charAt(0).toUpperCase() + model.slice(1)}</h3>
-                        
-                        <div className="metric">
-                          <label>Readability:</label>
-                          <div className="progress-bar">
-                            <div 
-                              className="progress-fill" 
-                              style={{ width: `${data.readability}%` }}
-                            ></div>
-                            <span>{data.readability}/100</span>
-                          </div>
-                        </div>
-                        
-                        <div className="metric">
-                          <label>Complexity:</label>
-                          <div className="progress-bar">
-                            <div 
-                              className="progress-fill complexity" 
-                              style={{ width: `${data.complexity}%` }}
-                            ></div>
-                            <span>{data.complexity}/100</span>
-                          </div>
-                        </div>
-                        
-                        <div className="metric">
-                          <label>Technical Debt:</label>
-                          <div className="progress-bar">
-                            <div 
-                              className="progress-fill debt" 
-                              style={{ width: `${data.technicalDebt}%` }}
-                            ></div>
-                            <span>{data.technicalDebt}/100</span>
-                          </div>
-                        </div>
-                        
-                        {data.issues.length > 0 && (
-                          <div className="issues">
-                            <label>Potential Issues:</label>
-                            <ul>
-                              {data.issues.map((issue, i) => (
-                                <li key={i}>{issue}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                {analysis.bestModel && (
-                  <div className="best-model">
-                    <h3>Best Model: {analysis.bestModel.charAt(0).toUpperCase() + analysis.bestModel.slice(1)}</h3>
-                    <p>
-                      This model scored highest in our analysis considering readability, 
-                      complexity, and technical debt factors.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </main>
-    </div>
-  );
+        </>
+      )}
+    </main>
+  </div>
+);
 };
 
 export default Dashboard;
