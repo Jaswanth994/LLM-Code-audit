@@ -49,7 +49,7 @@ const ResultsDisplay = ({ responses, selectedModels }) => {
   };
 
   const getOverallAnalysis = () => {
-    const models = ['chatgpt', 'deepseek', 'gemini'];
+    const models = ['chatgpt', 'deepseek', 'gemini' , 'llama' , 'mistral' ];
     const analysis = {};
     let bestScore = -Infinity;
     let bestModel = null;
@@ -130,6 +130,8 @@ const ResultsDisplay = ({ responses, selectedModels }) => {
       {selectedModels.chatgpt && responses.chatgpt && renderCodeBlock("ChatGPT Response", responses.chatgpt)}
       {selectedModels.deepseek && responses.deepseek && renderCodeBlock("DeepSeek Response", responses.deepseek)}
       {selectedModels.gemini && responses.gemini && renderCodeBlock("Gemini Response", responses.gemini)}
+      {selectedModels.llama && responses.llama && renderCodeBlock("LLaMA Response", responses.llama)}
+      {selectedModels.mistral && responses.mistral && renderCodeBlock("Mistral Response", responses.mistral)}
 
       <button onClick={handleAnalyze} className="analyze-btn">Analyze All</button>
 

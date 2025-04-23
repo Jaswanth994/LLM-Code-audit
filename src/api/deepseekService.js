@@ -1,11 +1,11 @@
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY ;
 
 export async function getDeepSeekResponse(prompt) {
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
       "HTTP-Referer": "http://localhost:5173", // Replace with your domain in production
       "X-Title": "Multi-LLM Tool"
     },

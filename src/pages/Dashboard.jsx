@@ -7,6 +7,8 @@ import ResultsDisplay from "../components/ResultsDisplay";
 import { getChatGPTResponse } from "../api/openaiService";
 import { getDeepSeekResponse } from "../api/deepseekService";
 import { getGeminiResponse } from "../api/geminiService";
+import { getLlama4ScoutResponse } from "../api/llamaService";
+import { getDolphinResponse } from "../api/mistralService";
 import Header from "../components/Header";
 import "../styles/dashboard.css";
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -61,6 +63,8 @@ const Dashboard = () => {
     chatgpt: "",
     deepseek: "",
     gemini: "",
+    llama: "",
+    mistral: "",
   });
   const [loading, setLoading] = useState(false);
   const [initialPrompt, setInitialPrompt] = useState("");
@@ -68,6 +72,8 @@ const Dashboard = () => {
     chatgpt: true,
     deepseek: true,
     gemini: true,
+    llama: true,
+    mistral: true,
   });
   const [error, setError] = useState(null);
   const [analysis, setAnalysis] = useState();
@@ -92,6 +98,8 @@ const Dashboard = () => {
         chatgpt: models.includes("chatgpt"),
         deepseek: models.includes("deepseek"),
         gemini: models.includes("gemini"),
+        llama: models.includes("llama"),
+        mistral: models.includes("mistral"),
       });
     }
   }, [location]);
@@ -157,6 +165,22 @@ const Dashboard = () => {
           getGeminiResponse(prompt)
             .then(res => ({ model: "gemini", response: res }))
             .catch(err => ({ model: "gemini", response: `Error: ${err.message}` }))
+        );
+      }
+
+      if (modelsToUse.llama) {
+        requests.push(
+          getLlama4ScoutResponse(prompt)
+            .then(res => ({ model: "llama", response: res }))
+            .catch(err => ({ model: "llama", response: `Error: ${err.message}` }))
+        );
+      }
+
+      if (modelsToUse.llama) {
+        requests.push(
+          getDolphinResponse(prompt)
+            .then(res => ({ model: "mistral", response: res }))
+            .catch(err => ({ model: "mistral", response: `Error: ${err.message}` }))
         );
       }
 
