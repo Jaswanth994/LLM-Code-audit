@@ -1,10 +1,11 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { auth } from '../firebaseConfig';
 import '../styles/Header.css';
 
 const Header = ({ user }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -15,16 +16,22 @@ const Header = ({ user }) => {
     }
   };
 
+  // Improved active path detection
+  const isActive = (path) => {
+    return location.pathname === path || 
+           (path === '/dashboard' && location.pathname.startsWith('/dashboard'));
+  };
+
   return (
     <header className="app-header">
       <div className="header-container">
-        <h1 className="logo">LLM Code Audit</h1>
+        <Link to="/" className="logo">LLM Code Audit</Link>
         <nav className="nav-links">
-          <Link to="/">Home</Link>
-          <Link to="/about">About</Link>
+          <Link to="/" className={isActive('/') ? 'active' : ''}>Home</Link>
+          <Link to="/about" className={isActive('/about') ? 'active' : ''}>About</Link>
           {user ? (
             <>
-              <Link to="/dashboard">Dashboard</Link>
+              <Link to="/dashboard" className={isActive('/dashboard') ? 'active' : ''}>Dashboard</Link>
               <button onClick={handleLogout} className="auth-button">Logout</button>
             </>
           ) : (

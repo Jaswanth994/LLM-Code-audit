@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import '../styles/ResultsDisplay.css';
+import '../styles/dashboard.css';
 
 const ResultsDisplay = ({ responses, selectedModels }) => {
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ const ResultsDisplay = ({ responses, selectedModels }) => {
   };
 
   const getOverallAnalysis = () => {
-    const models = ['chatgpt', 'deepseek', 'gemini' , 'llama' , 'mistral' ];
+    const models = ['chatgpt', 'deepseek', 'gemini', 'llama', 'mistral'];
     const analysis = {};
     let bestScore = -Infinity;
     let bestModel = null;
@@ -132,7 +132,6 @@ const ResultsDisplay = ({ responses, selectedModels }) => {
       {selectedModels.gemini && responses.gemini && renderCodeBlock("Gemini Response", responses.gemini)}
       {selectedModels.llama && responses.llama && renderCodeBlock("LLaMA Response", responses.llama)}
       {selectedModels.mistral && responses.mistral && renderCodeBlock("Mistral Response", responses.mistral)}
-
       <button onClick={handleAnalyze} className="analyze-btn">Analyze All</button>
 
       <div className="analysis-results">

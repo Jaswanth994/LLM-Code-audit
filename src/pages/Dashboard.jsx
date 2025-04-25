@@ -1,4 +1,3 @@
-// src/pages/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { auth } from "../firebaseConfig";
@@ -12,7 +11,6 @@ import { getDolphinResponse } from "../api/mistralService";
 import Header from "../components/Header";
 import "../styles/dashboard.css";
 import { useAuthState } from 'react-firebase-hooks/auth';
-
 
 const analyzeCode = (code) => {
   if (!code || typeof code !== 'string') {
@@ -67,7 +65,7 @@ const Dashboard = () => {
     mistral: "",
   });
   const [loading, setLoading] = useState(false);
-  const [initialPrompt, setInitialPrompt] = useState("");
+  const [currentPrompt, setCurrentPrompt] = useState("");
   const [selectedModels, setSelectedModels] = useState({
     chatgpt: true,
     deepseek: true,
@@ -76,7 +74,7 @@ const Dashboard = () => {
     mistral: true,
   });
   const [error, setError] = useState(null);
-  const [analysis, setAnalysis] = useState();
+  const [analysis, setAnalysis] = useState(null);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -93,8 +91,17 @@ const Dashboard = () => {
     const models = searchParams.get("models")?.split(",") || [];
     
     if (prompt) {
-      setInitialPrompt(prompt);
+      setCurrentPrompt(prompt);
       setSelectedModels({
+        chatgpt: models.includes("chatgpt"),
+        deepseek: models.includes("deepseek"),
+        gemini: models.includes("gemini"),
+        llama: models.includes("llama"),
+        mistral: models.includes("mistral"),
+      });
+      
+      // Automatically generate responses
+      handleQuerySubmit(prompt, {
         chatgpt: models.includes("chatgpt"),
         deepseek: models.includes("deepseek"),
         gemini: models.includes("gemini"),
@@ -167,7 +174,6 @@ const Dashboard = () => {
             .catch(err => ({ model: "gemini", response: `Error: ${err.message}` }))
         );
       }
-
       if (modelsToUse.llama) {
         requests.push(
           getLlama4ScoutResponse(prompt)
@@ -175,8 +181,7 @@ const Dashboard = () => {
             .catch(err => ({ model: "llama", response: `Error: ${err.message}` }))
         );
       }
-
-      if (modelsToUse.llama) {
+      if (modelsToUse.mistral) {
         requests.push(
           getDolphinResponse(prompt)
             .then(res => ({ model: "mistral", response: res }))
@@ -192,7 +197,6 @@ const Dashboard = () => {
       });
       
       setResponses(newResponses);
-      analyzeResponses();
     } catch (err) {
       setError(`Failed to get responses: ${err.message}`);
     } finally {
@@ -200,58 +204,59 @@ const Dashboard = () => {
     }
   };
 
+  const handleEditPrompt = () => {
+    const enabledModels = Object.entries(selectedModels)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([model]) => model)
+      .join(',');
+  
+    navigate(`/?prompt=${encodeURIComponent(currentPrompt)}&models=${enabledModels}`);
+  };
+  
+
   return (
-  <div className="dashboard-container">
-    <Header user={user} /> 
-    
-    <main className="dashboard-content">
-      <h1 className="dashboard-title">LLM Code Analysis Dashboard</h1>
+    <div className="dashboard-container">
+      <Header user={user} />
       
-      <div className="query-section">
-        <QueryInput 
-          onSubmit={handleQuerySubmit}
-          isLoading={loading}
-          initialValue={initialPrompt}
-        />
-        {error && <p className="error-message">{error}</p>}
-      </div>
-
-      <div className="model-selection">
-        <h3>Select Models to Compare:</h3>
-        <div className="model-checkboxes">
-          {Object.entries(selectedModels).map(([model, isSelected]) => (
-            <label key={model} className="model-checkbox">
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => setSelectedModels(prev => ({
-                  ...prev,
-                  [model]: !prev[model]
-                }))}
-              />
-              {model.charAt(0).toUpperCase() + model.slice(1)}
-            </label>
-          ))}
+      <main className="dashboard-content">
+        <h1 className="dashboard-title">LLM Code Analysis Dashboard</h1>
+        
+        <div className="prompt-display-section">
+          <div className="prompt-display">
+            <h3>Entered Prompt:</h3>
+            <p>{currentPrompt}</p>
+            <button onClick={handleEditPrompt} className="edit-prompt-btn">
+              Edit Prompt
+            </button>
+          </div>
         </div>
-      </div>
 
-      {loading ? (
-        <div className="loading-indicator">
-          <div className="spinner"></div>
-          <p>Generating responses...</p>
-        </div>
-      ) : (
-        <>
-          <ResultsDisplay 
-            responses={responses} 
-            selectedModels={selectedModels} 
-            analysis={analysis}
-          />
-        </>
-      )}
-    </main>
-  </div>
-);
+        {loading ? (
+          <div className="loading-indicator">
+            <div className="spinner"></div>
+            <p>Generating responses...</p>
+          </div>
+        ) : (
+          <>
+            <ResultsDisplay 
+              responses={responses} 
+              selectedModels={selectedModels} 
+              analysis={analysis}
+            />
+            
+            {!analysis && Object.values(responses).some(response => response) && (
+              <button 
+                onClick={analyzeResponses} 
+                className="analyze-btn"
+              >
+                Analyze Codes
+              </button>
+            )}
+          </>
+        )}
+      </main>
+    </div>
+  );
 };
 
 export default Dashboard;

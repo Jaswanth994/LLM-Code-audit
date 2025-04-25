@@ -1,59 +1,195 @@
-/* src/styles/HomePage.css */
 .home-container {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #121212;
+  color: #e0e0e0;
+  margin: 0;
+  padding: 0;
+}
+
+.home-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin: 0;
+}
+
+.prompt-container {
+  max-width: 800px;
+  width: 100%;
+  text-align: center;
+}
+
+.prompt-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.prompt-input {
+  width: 100%;
+  padding: 1.5rem;
+  border: 2px solid #333333;
+  border-radius: 12px;
+  font-size: 1rem;
+  resize: none;
+  min-height: 200px;
+  transition: all 0.3s ease;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.prompt-input:focus {
+  border-color: #646cff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.submit-btn {
+  background-color: #646cff;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: center;
+  margin-top: 1rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.submit-btn:hover {
+  background-color: #535bf2;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+.model-selection-container {
+  background: #1e1e1e;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  margin-top: 1.5rem;
+  text-align: center;
+  border: 1px solid #333333;
+}
+
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  justify-items: center;
+}
+
+.model-box {
+  border: 2px solid #333333;
+  border-radius: 10px;
+  padding: 1.25rem 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #252525;
+  width: 100%;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.model-box:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  border-color: #646cff;
+}
+
+.model-box.selected {
+  border-color: #646cff;
+  background-color: rgba(100, 108, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.model-icon {
+  height: 40px;
+  width: 40px;
+  margin-bottom: 0.75rem;
+  filter: brightness(0.9);
+}
+
+.model-name {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  
-  .home-content {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  .prompt-container {
-    max-width: 800px;
-    width: 100%;
-    text-align: center;
+}
+
+.model-box:nth-child(1) { animation-delay: 0.1s; }
+.model-box:nth-child(2) { animation-delay: 0.2s; }
+.model-box:nth-child(3) { animation-delay: 0.3s; }
+.model-box:nth-child(4) { animation-delay: 0.4s; }
+.model-box:nth-child(5) { animation-delay: 0.5s; }
+
+@media (max-width: 768px) {
+  /* .home-content {
+    padding: 1rem;
   }
-  
-  .prompt-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+   */
+  h2 {
+    font-size: 1.5rem;
   }
   
   .prompt-input {
-    width: 100%;
-    padding: 1.5rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 1rem;
-    resize: none;
-    min-height: 200px;
-    transition: border-color 0.3s;
+    min-height: 150px;
+    padding: 1rem;
   }
   
-  .prompt-input:focus {
-    border-color: #3498db;
-    outline: none;
+  .model-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
   
-  .submit-btn {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    align-self: center;
+  .model-box {
+    max-width: 100%;
+    padding: 1rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .model-grid {
+    grid-template-columns: 1fr;
   }
   
-  .submit-btn:hover {
-    background-color: #2980b9;
+  .model-box {
+    max-width: 100%;
   }
+}
