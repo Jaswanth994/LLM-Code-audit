@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// HomePage.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import '../styles/HomePage.css';
@@ -7,6 +8,7 @@ import deepseekIcon from '../assets/deepseek.png';
 import geminiIcon from '../assets/gemini.png';
 import llamaIcon from '../assets/llama.png';
 import mistralIcon from '../assets/mistral.png';
+import uploadIcon from '../assets/upload.png';
 
 const modelIcons = {
   chatgpt: chatgptIcon,
@@ -26,15 +28,20 @@ const HomePage = ({ user }) => {
     llama: false,
     mistral: false,
   });
+  const [userCode, setUserCode] = useState('');
+  const [showUserCodeInput, setShowUserCodeInput] = useState(false);
+  const [fileContent, setFileContent] = useState('');
 
   const navigate = useNavigate();
   const location = useLocation();
+  const modelSelectionRef = useRef(null);
+  const fileInputRef = useRef(null);
 
-  // If redirected with prompt (Edit Prompt use case)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const promptParam = params.get('prompt');
     const modelsParam = params.get('models');
+    const userCodeParam = params.get('userCode');
 
     if (promptParam) setPrompt(promptParam);
     if (modelsParam) {
@@ -44,7 +51,15 @@ const HomePage = ({ user }) => {
         newModels[model] = modelsArray.includes(model);
       });
       setSelectedModels(newModels);
-      setShowModels(true); // Show model section if editing
+      setShowModels(true);
+      
+      setTimeout(() => {
+        modelSelectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
+    if (userCodeParam) {
+      setUserCode(decodeURIComponent(userCodeParam));
+      setShowUserCodeInput(true);
     }
   }, [location.search]);
 
@@ -52,6 +67,13 @@ const HomePage = ({ user }) => {
     e.preventDefault();
     if (!prompt.trim()) return;
     setShowModels(true);
+    
+    setTimeout(() => {
+      modelSelectionRef.current?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }, 100);
   };
 
   const handleFinalSubmit = (e) => {
@@ -61,19 +83,23 @@ const HomePage = ({ user }) => {
       .map(([model]) => model)
       .join(',');
 
-    if (!enabledModels) return alert('Please select at least one LLM.');
+    if (!enabledModels && !userCode) return alert('Please select at least one LLM or provide your own code.');
 
     if (!user) {
       navigate('/auth', {
         state: {
           from: {
             pathname: '/dashboard',
-            search: `?prompt=${encodeURIComponent(prompt)}&models=${enabledModels}`,
+            search: `?prompt=${encodeURIComponent(prompt)}&models=${enabledModels}${
+              userCode ? `&userCode=${encodeURIComponent(userCode)}` : ''
+            }`,
           },
         },
       });
     } else {
-      navigate(`/dashboard?prompt=${encodeURIComponent(prompt)}&models=${enabledModels}`);
+      navigate(`/dashboard?prompt=${encodeURIComponent(prompt)}&models=${enabledModels}${
+        userCode ? `&userCode=${encodeURIComponent(userCode)}` : ''
+      }`);
     }
   };
 
@@ -82,6 +108,22 @@ const HomePage = ({ user }) => {
       ...prev,
       [model]: !prev[model],
     }));
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setFileContent(event.target.result);
+      setUserCode(event.target.result);
+    };
+    reader.readAsText(file);
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
   };
 
   return (
@@ -100,16 +142,14 @@ const HomePage = ({ user }) => {
               rows={6}
             />
 
-            {!showModels && (
+            {!showModels ? (
               <button type="submit" className="submit-btn">
                 Generate Code
               </button>
-            )}
-
-            {showModels && (
+            ) : (
               <>
-                <div className="model-selection-container">
-                  <h3>Select LLMs:</h3>
+                <div className="model-selection-container" ref={modelSelectionRef}>
+                  <h3>Select LLMs to Compare</h3>
                   <div className="model-grid">
                     {Object.entries(modelIcons).map(([model, icon]) => (
                       <div
@@ -119,12 +159,58 @@ const HomePage = ({ user }) => {
                       >
                         <img src={icon} alt={model} className="model-icon" />
                         <span className="model-name">{model.toUpperCase()}</span>
+                        {selectedModels[model] && (
+                          <div className="model-checkmark">✓</div>
+                        )}
                       </div>
                     ))}
+                    <div
+                      className={`model-box ${showUserCodeInput ? 'selected' : ''}`}
+                      onClick={() => setShowUserCodeInput(!showUserCodeInput)}
+                    >
+                      <img src={uploadIcon} alt="user-code" className="model-icon" />
+                      <span className="model-name">MY CODE</span>
+                      {showUserCodeInput && (
+                        <div className="model-checkmark">✓</div>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {showUserCodeInput && (
+                  <div className="user-code-container">
+                    <h3>Enter Your Code</h3>
+                    <textarea
+                      value={userCode}
+                      onChange={(e) => setUserCode(e.target.value)}
+                      placeholder="Paste your code here..."
+                      className="prompt-input"
+                      rows={6}
+                    />
+                    <div className="file-upload-container">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        style={{ display: 'none' }}
+                        accept=".txt,.js,.py,.java,.c,.cpp,.cs,.go,.php,.rb,.rs,.swift,.kt"
+                      />
+                      <button
+                        type="button"
+                        onClick={triggerFileInput}
+                        className="file-upload-btn"
+                      >
+                        Upload Code File
+                      </button>
+                      {fileContent && (
+                        <span className="file-name">{fileInputRef.current?.files[0]?.name}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <button type="submit" className="submit-btn">
-                  Generate with Selected Models
+                  Compare Code
                 </button>
               </>
             )}

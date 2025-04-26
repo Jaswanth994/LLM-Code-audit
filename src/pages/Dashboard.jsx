@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { auth } from "../firebaseConfig";
-import QueryInput from "../components/QueryInput";
 import ResultsDisplay from "../components/ResultsDisplay";
 import { getChatGPTResponse } from "../api/openaiService";
 import { getDeepSeekResponse } from "../api/deepseekService";
@@ -18,16 +17,15 @@ const analyzeCode = (code) => {
       readability: 0,
       complexity: 0,
       technicalDebt: 0,
+      maintainability: 0,
       issues: []
     };
   }
 
-  // Simple analysis (in a real app, you'd use proper code analysis tools)
   const lines = code.split('\n').length;
   const charCount = code.length;
   const commentCount = (code.match(/\/\/|\/\*|\*\//g) || []).length;
   
-  // Calculate metrics (simplified for demo)
   const readability = Math.min(100, Math.max(0, 
     80 - (lines / 50) - (charCount / lines / 100) + (commentCount * 2)
   ));
@@ -40,6 +38,10 @@ const analyzeCode = (code) => {
     complexity * 0.7 - readability * 0.3
   ));
   
+  const maintainability = Math.min(100, Math.max(0,
+    100 - (complexity * 0.3) - (technicalDebt * 0.2) - (lines / 50)
+  ));
+  
   const issues = [];
   if (lines > 100) issues.push("Long method/function");
   if (complexity > 70) issues.push("High complexity");
@@ -49,6 +51,7 @@ const analyzeCode = (code) => {
     readability: Math.round(readability),
     complexity: Math.round(complexity),
     technicalDebt: Math.round(technicalDebt),
+    maintainability: Math.round(maintainability),
     issues
   };
 };
@@ -63,6 +66,7 @@ const Dashboard = () => {
     gemini: "",
     llama: "",
     mistral: "",
+    user: ""
   });
   const [loading, setLoading] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState("");
@@ -72,8 +76,8 @@ const Dashboard = () => {
     gemini: true,
     llama: true,
     mistral: true,
+    user: true
   });
-  const [error, setError] = useState(null);
   const [analysis, setAnalysis] = useState(null);
 
   useEffect(() => {
@@ -89,6 +93,7 @@ const Dashboard = () => {
     const searchParams = new URLSearchParams(location.search);
     const prompt = searchParams.get("prompt");
     const models = searchParams.get("models")?.split(",") || [];
+    const userCode = searchParams.get("userCode");
     
     if (prompt) {
       setCurrentPrompt(prompt);
@@ -98,15 +103,20 @@ const Dashboard = () => {
         gemini: models.includes("gemini"),
         llama: models.includes("llama"),
         mistral: models.includes("mistral"),
+        user: userCode ? true : false
       });
       
-      // Automatically generate responses
+      if (userCode) {
+        setResponses(prev => ({ ...prev, user: userCode }));
+      }
+      
       handleQuerySubmit(prompt, {
         chatgpt: models.includes("chatgpt"),
         deepseek: models.includes("deepseek"),
         gemini: models.includes("gemini"),
         llama: models.includes("llama"),
         mistral: models.includes("mistral"),
+        user: userCode ? true : false
       });
     }
   }, [location]);
@@ -118,9 +128,7 @@ const Dashboard = () => {
         analysisResults[model] = analyzeCode(responses[model]);
       }
     });
-    setAnalysis(analysisResults);
     
-    // Determine best model
     if (Object.keys(analysisResults).length > 0) {
       const models = Object.keys(analysisResults);
       const bestModel = models.reduce((best, current) => {
@@ -133,21 +141,16 @@ const Dashboard = () => {
         return currentScore > bestScore ? current : best;
       }, models[0]);
       
-      setAnalysis(prev => ({
-        ...prev,
-        bestModel
-      }));
+      analysisResults.bestModel = bestModel;
     }
+    
+    setAnalysis(analysisResults);
   };
 
   const handleQuerySubmit = async (prompt, modelsToUse = selectedModels) => {
-    if (!prompt.trim()) {
-      setError("Please enter a valid prompt");
-      return;
-    }
+    if (!prompt.trim()) return;
 
     setLoading(true);
-    setError(null);
     setAnalysis(null);
     
     try {
@@ -188,6 +191,7 @@ const Dashboard = () => {
             .catch(err => ({ model: "mistral", response: `Error: ${err.message}` }))
         );
       }
+      
 
       const results = await Promise.all(requests);
       const newResponses = { ...responses };
@@ -198,7 +202,7 @@ const Dashboard = () => {
       
       setResponses(newResponses);
     } catch (err) {
-      setError(`Failed to get responses: ${err.message}`);
+      console.error("Failed to get responses:", err);
     } finally {
       setLoading(false);
     }
@@ -206,28 +210,28 @@ const Dashboard = () => {
 
   const handleEditPrompt = () => {
     const enabledModels = Object.entries(selectedModels)
-      .filter(([_, isSelected]) => isSelected)
+      .filter(([model, isSelected]) => isSelected && model !== 'user')
       .map(([model]) => model)
       .join(',');
   
-    navigate(`/?prompt=${encodeURIComponent(currentPrompt)}&models=${enabledModels}`);
+    navigate(`/?prompt=${encodeURIComponent(currentPrompt)}&models=${enabledModels}${
+      responses.user ? `&userCode=${encodeURIComponent(responses.user)}` : ''
+    }`);
   };
-  
 
   return (
     <div className="dashboard-container">
       <Header user={user} />
       
       <main className="dashboard-content">
-        <h1 className="dashboard-title">LLM Code Analysis Dashboard</h1>
-        
-        <div className="prompt-display-section">
-          <div className="prompt-display">
-            <h3>Entered Prompt:</h3>
-            <p>{currentPrompt}</p>
+        <div className="prompt-display">
+          <h3>Entered Prompt:</h3>
+          <p className="prompt-text">{currentPrompt}</p>
+          <div className="button-group">
             <button onClick={handleEditPrompt} className="edit-prompt-btn">
               Edit Prompt
             </button>
+           
           </div>
         </div>
 
@@ -237,23 +241,18 @@ const Dashboard = () => {
             <p>Generating responses...</p>
           </div>
         ) : (
-          <>
-            <ResultsDisplay 
-              responses={responses} 
-              selectedModels={selectedModels} 
-              analysis={analysis}
-            />
-            
-            {!analysis && Object.values(responses).some(response => response) && (
-              <button 
-                onClick={analyzeResponses} 
-                className="analyze-btn"
-              >
+          <ResultsDisplay 
+            responses={responses} 
+            selectedModels={selectedModels} 
+            analysis={analysis}
+          />
+        )}
+         {!analysis && !loading && Object.values(responses).some(Boolean) && (
+              <button onClick={analyzeResponses} className="analyze-btn">
                 Analyze Codes
               </button>
             )}
-          </>
-        )}
+        
       </main>
     </div>
   );

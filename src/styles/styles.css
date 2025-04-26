@@ -6,7 +6,7 @@
 }
 
 .code-block {
-  background-color: #f8f8f8;
+  background-color: whitesmoke;
   padding: 1rem;
   border-radius: 8px;
   position: relative;
@@ -35,7 +35,7 @@
 }
 
 .code-block pre {
-  background-color: #fff;
+  background-color: whitesmoke;
   padding: 0.5rem;
   overflow-x: auto;
   border-radius: 4px;
