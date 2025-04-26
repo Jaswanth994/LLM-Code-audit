@@ -29,6 +29,7 @@ const Header = ({ user }) => {
         <nav className="nav-links">
           <Link to="/" className={isActive('/') ? 'active' : ''}>Home</Link>
           <Link to="/about" className={isActive('/about') ? 'active' : ''}>About</Link>
+          <Link to="/history" className={isActive('/history') ? 'active' : ''}>History</Link>
           {user ? (
             <>
               <Link to="/dashboard" className={isActive('/dashboard') ? 'active' : ''}>Dashboard</Link>

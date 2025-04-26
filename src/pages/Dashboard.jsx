@@ -145,7 +145,7 @@ const Dashboard = () => {
     }
     
     setAnalysis(analysisResults);
-  };
+  };  
 
   const handleQuerySubmit = async (prompt, modelsToUse = selectedModels) => {
     if (!prompt.trim()) return;

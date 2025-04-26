@@ -1,4 +1,4 @@
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY ;
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 
 export async function getDeepSeekResponse(prompt) {
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

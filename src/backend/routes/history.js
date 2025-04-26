@@ -1,6 +1,7 @@
 // backend/routes/history.js
 import express from 'express';
-import History from './models/History.js'; // Use ES module import for models
+import History from './backend/models/History.js';
+import verifyToken from '../middleware/verifyToken.js'; // Assuming verifyToken is also an ES module
 
 const router = express.Router();
 
