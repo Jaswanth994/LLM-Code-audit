@@ -52,8 +52,11 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
     }
   };
 
-  const renderCodeBlock = (label, code) => {
+  const renderCodeBlock = (label, codeData) => {
+    // Handle both string (legacy) and object formats
+    const code = typeof codeData === 'string' ? codeData : codeData.code;
     const metrics = analyzeCode(code);
+    const storedMetrics = typeof codeData === 'object' ? codeData : null;
 
     return (
       <div className="model-result-card">
@@ -61,7 +64,8 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
           <div className="model-name">{label}</div>
           {metrics && (
             <div className="model-meta">
-              {metrics.lines} lines | {metrics.functions} functions
+              {metrics.lines} lines | {metrics.functions} functions | 
+              Readability: {storedMetrics?.readability ?? metrics.readability}/100
             </div>
           )}
         </div>
@@ -74,6 +78,16 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
             {code}
           </pre>
         </div>
+
+        {/* Show stored metrics if available */}
+        {storedMetrics && (
+          <div className="stored-metrics">
+            <h4>Stored Analysis:</h4>
+            <div>Readability: {storedMetrics.readability}/100</div>
+            <div>Complexity: {storedMetrics.complexity}/100</div>
+            <div>Maintainability: {storedMetrics.maintainability}/100</div>
+          </div>
+        )}
       </div>
     );
   };

@@ -10,6 +10,7 @@ import { getDolphinResponse } from "../api/mistralService";
 import Header from "../components/Header";
 import "../styles/dashboard.css";
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { saveComparison } from "../firestoreService";
 
 const analyzeCode = (code) => {
   if (!code || typeof code !== 'string') {
@@ -121,7 +122,7 @@ const Dashboard = () => {
     }
   }, [location]);
 
-  const analyzeResponses = () => {
+  const analyzeResponses = async () => {
     const analysisResults = {};
     Object.keys(responses).forEach(model => {
       if (responses[model]) {
@@ -145,6 +146,20 @@ const Dashboard = () => {
     }
     
     setAnalysis(analysisResults);
+
+    if (user) {
+      try {
+        await saveComparison(
+          user.uid, 
+          currentPrompt, 
+          responses, 
+          analysisResults, 
+          selectedModels
+        );
+      } catch (error) {
+        console.error("Failed to save comparison:", error);
+      }
+    }
   };  
 
   const handleQuerySubmit = async (prompt, modelsToUse = selectedModels) => {
@@ -199,6 +214,7 @@ const Dashboard = () => {
       results.forEach(({ model, response }) => {
         newResponses[model] = response;
       });
+
       
       setResponses(newResponses);
     } catch (err) {
@@ -231,7 +247,6 @@ const Dashboard = () => {
             <button onClick={handleEditPrompt} className="edit-prompt-btn">
               Edit Prompt
             </button>
-           
           </div>
         </div>
 
