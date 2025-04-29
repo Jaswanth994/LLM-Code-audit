@@ -252,24 +252,8 @@ const Dashboard = () => {
   };
 
   const analyzeCustomCode = () => {
-    setError(null); // Clear any previous errors
-  
-    try {
-      // Try to evaluate the custom code to check for syntax errors
-      new Function(customCode); // This will throw an error if the code is invalid
-  
-      // If no error, proceed with the analysis
-      const analysisResult = analyzeCode(customCode);
-      setCustomCodeAnalysis(analysisResult);
-  
-    } catch (error) {
-      // If there's a syntax error, set the error state
-    
-        console.error(error);
-        
-      setCustomCodeAnalysis(null);  // Clear any previous analysis
-      setError("Code has a syntax error: " + error.message);  // Display the error message
-    }
+    const analysisResult = analyzeCode(customCode);
+    setCustomCodeAnalysis(analysisResult);
   };
 
   return (
@@ -321,11 +305,11 @@ const Dashboard = () => {
                 Analyze Custom Code
               </button>
 
-              {error && (
+              {/* {error && (
     <div className="error-message">
       <p>{error}</p>
     </div>
-  )}
+  )} */}
 
 
               {customCodeAnalysis && (

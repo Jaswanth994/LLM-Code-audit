@@ -7,7 +7,15 @@
   margin: -8px;
   padding: 0;
 }
-
+button {
+  cursor: pointer;
+  background-color: #646cff;
+  color: white;
+  margin-top: 3mm;
+  height: 12mm;
+  border-radius: 2mm;
+  transition: all 0.3s ease;
+}
 .home-content {
   flex: 1;
   display: flex;

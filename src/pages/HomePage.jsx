@@ -191,7 +191,7 @@ const HomePage = ({ user }) => {
                     <textarea
                       value={userCode}
                       onChange={(e) => setUserCode(e.target.value)}
-                      placeholder="Paste your custom code here..."
+                      placeholder="Paste your custom correct code here..."
                       className="user-code-input"
                       rows={6}
                     />
@@ -202,9 +202,11 @@ const HomePage = ({ user }) => {
                       onChange={handleFileUpload}
                       style={{ display: 'none' }}
                     />
+                    <div>
                     <button type="button" onClick={triggerFileInput}>
                       Upload Code File
                     </button>
+                    </div>
                   </div>
                 )}
 
