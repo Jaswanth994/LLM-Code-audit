@@ -1,7 +1,7 @@
 import React from "react";
 import '../styles/ResultsDisplay.css';
 
-const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
+const ResultsDisplay = ({ responses, selectedModels, customCode }) => {
   const analyzeCode = (code) => {
     if (!code || typeof code !== 'string') return null;
 
@@ -179,23 +179,132 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
     );
   };
 
+  const getOverallAnalysis = () => {
+    const models = ["chatgpt", "deepseek", "gemini", "llama", "mistral"];
+    const analysis = {};
+    let bestScore = -Infinity;
+    let bestModel = null;
+
+    models.forEach((model) => {
+      if (selectedModels[model] && responses[model]) {
+        const metrics = analyzeCode(responses[model]);
+        if (metrics) {
+          const score =
+            metrics.readability + metrics.maintainability - metrics.complexity - metrics.technicalDebt;
+          analysis[model] = metrics;
+          if (score > bestScore) {
+            bestScore = score;
+            bestModel = model;
+          }
+        }
+      }
+    });
+
+    if (customCode) {
+      const customMetrics = analyzeCode(customCode);
+      if (customMetrics) {
+        analysis.custom = customMetrics;
+        const customScore =
+          customMetrics.readability +
+          customMetrics.maintainability -
+          customMetrics.complexity -
+          customMetrics.technicalDebt;
+        if (customScore > bestScore) {
+          bestScore = customScore;
+          bestModel = "custom";
+        }
+      }
+    }
+
+    if (bestModel) {
+      analysis.bestModel = bestModel;
+    }
+
+    return analysis;
+  };
+
+ 
+
+  const analysis = getOverallAnalysis();
+
   return (
-    <div className="results-container">
-      <div className="results-content">
-        <div className="results-header">
-          <h1 className="results-title">Code Comparison Results</h1>
+    <div className="results">
+      {selectedModels.chatgpt && responses.chatgpt && renderCodeBlock("ChatGPT Response", responses.chatgpt)}
+      {selectedModels.deepseek && responses.deepseek && renderCodeBlock("DeepSeek Response", responses.deepseek)}
+      {selectedModels.gemini && responses.gemini && renderCodeBlock("Gemini Response", responses.gemini)}
+      {selectedModels.llama && responses.llama && renderCodeBlock("LLaMA Response", responses.llama)}
+      {selectedModels.mistral && responses.mistral && renderCodeBlock("Mistral Response", responses.mistral)}
+      {customCode && renderCodeBlock("Custom Code", customCode)}
+
+      <button onClick={handleAnalyze} className="analyze-btn">Analyze All</button>
+
+      <div className="analysis-results">
+        <h2>Code Quality Analysis</h2>
+        <div className="metrics-grid">
+          {Object.entries(analysis).map(([model, data]) => {
+            if (model === "bestModel") return null;
+            return (
+              <div key={model} className="metric-card">
+                <h3>{model === "custom" ? "Custom Code" : model.charAt(0).toUpperCase() + model.slice(1)}</h3>
+
+                <div className="metric">
+                  <label>Readability:</label>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${data.readability}%` }}></div>
+                    <span>{data.readability}/100</span>
+                  </div>
+                </div>
+
+                <div className="metric">
+                  <label>Complexity:</label>
+                  <div className="progress-bar">
+                    <div className="progress-fill complexity" style={{ width: `${data.complexity}%` }}></div>
+                    <span>{data.complexity}/100</span>
+                  </div>
+                </div>
+
+                <div className="metric">
+                  <label>Technical Debt:</label>
+                  <div className="progress-bar">
+                    <div className="progress-fill debt" style={{ width: `${data.technicalDebt}%` }}></div>
+                    <span>{data.technicalDebt}/100</span>
+                  </div>
+                </div>
+
+                <div className="metric">
+                  <label>Maintainability:</label>
+                  <div className="progress-bar">
+                    <div className="progress-fill maintainability" style={{ width: `${data.maintainability}%` }}></div>
+                    <span>{data.maintainability}/100</span>
+                  </div>
+                </div>
+
+                <div className="metric">
+                  <label>ACI:</label>
+                  <div className="progress-bar">
+                    <div className="progress-fill aci" style={{ width: `${Math.min(100, data.aci)}%` }}></div>
+                    <span>{data.aci}</span>
+                  </div>
+                </div>
+
+                <div className="metric">
+                  <label>AMR:</label>
+                  <div className="progress-bar">
+                    <div className="progress-fill amr" style={{ width: `${Math.min(100, data.amr)}%` }}></div>
+                    <span>{data.amr}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="model-results-list">
-          {selectedModels.chatgpt && responses.chatgpt && renderCodeBlock("ChatGPT", responses.chatgpt)}
-          {selectedModels.deepseek && responses.deepseek && renderCodeBlock("DeepSeek", responses.deepseek)}
-          {selectedModels.gemini && responses.gemini && renderCodeBlock("Gemini", responses.gemini)}
-          {selectedModels.llama && responses.llama && renderCodeBlock("LLaMA", responses.llama)}
-          {selectedModels.mistral && responses.mistral && renderCodeBlock("Mistral", responses.mistral)}
-          {selectedModels.user && responses.user && renderCodeBlock("Your Code", responses.user)}
-        </div>
-
-        {renderAnalysis()}
+        {analysis.bestModel && (
+          <div className="best-model">
+            <h3>🏆 Best Model: {analysis.bestModel === "custom" ? "Custom Code" : analysis.bestModel.charAt(0).toUpperCase() + analysis.bestModel.slice(1)}</h3>
+            <p>This code had the best balance across readability, complexity, technical debt, and maintainability.</p>
+          </div>
+        )}
       </div>
     </div>
   );

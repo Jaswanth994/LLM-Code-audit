@@ -80,6 +80,12 @@ const Dashboard = () => {
     user: true
   });
   const [analysis, setAnalysis] = useState(null);
+  const [error, setError] = useState(null);
+
+  const [customCode, setCustomCode] = useState("");
+  const [customCodeAnalysis, setCustomCodeAnalysis] = useState(null);
+
+
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -235,6 +241,31 @@ const Dashboard = () => {
     }`);
   };
 
+  const handleCustomCodeChange = (event) => {
+    setCustomCode(event.target.value);
+  };
+
+  const analyzeCustomCode = () => {
+    setError(null); // Clear any previous errors
+  
+    try {
+      // Try to evaluate the custom code to check for syntax errors
+      new Function(customCode); // This will throw an error if the code is invalid
+  
+      // If no error, proceed with the analysis
+      const analysisResult = analyzeCode(customCode);
+      setCustomCodeAnalysis(analysisResult);
+  
+    } catch (error) {
+      // If there's a syntax error, set the error state
+    
+        console.error(error);
+        
+      setCustomCodeAnalysis(null);  // Clear any previous analysis
+      setError("Code has a syntax error: " + error.message);  // Display the error message
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <Header user={user} />
@@ -262,12 +293,56 @@ const Dashboard = () => {
             analysis={analysis}
           />
         )}
-         {!analysis && !loading && Object.values(responses).some(Boolean) && (
-              <button onClick={analyzeResponses} className="analyze-btn">
-                Analyze Codes
+       
+ {!analysis &&
+              Object.values(responses).some((response) => response) && (
+                <button onClick={analyzeResponses} className="analyze-btn">
+                  Analyze Codes
+                </button>
+              )}
+
+            {/* Custom Code Section */}
+            <div className="custom-code-section">
+              <h3>Enter Custom Code</h3>
+              <textarea
+                value={customCode}
+                onChange={handleCustomCodeChange}
+                rows="10"
+                cols="50"
+                placeholder="Enter your custom code here..."
+              />
+              <button onClick={analyzeCustomCode} className="analyze-btn">
+                Analyze Custom Code
               </button>
-            )}
-        
+
+              {error && (
+    <div className="error-message">
+      <p>{error}</p>
+    </div>
+  )}
+
+
+              {customCodeAnalysis && (
+                <div className="custom-code-analysis">
+                  <h4>Custom Code Analysis</h4>
+                  <pre>{JSON.stringify(customCodeAnalysis, null, 2)}</pre>
+                </div>
+              )}
+
+{customCodeAnalysis && (
+
+   
+<ResultsDisplay 
+responses={responses} 
+selectedModels={selectedModels} 
+customCode={customCode}   
+analysis={analysis}
+/>
+
+
+)}
+            </div>
+          
       </main>
     </div>
   );
