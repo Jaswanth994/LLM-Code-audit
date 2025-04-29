@@ -223,7 +223,15 @@ const ResultsDisplay = ({ responses, selectedModels, customCode }) => {
     return analysis;
   };
 
- 
+  const handleAnalyze = () => {
+    navigate("/dashboard", {
+      state: {
+        responses,
+        selectedModels,
+        customCode,
+      },
+    });
+  };
 
   const analysis = getOverallAnalysis();
 
