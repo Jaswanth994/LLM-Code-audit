@@ -69,6 +69,12 @@ const Dashboard = () => {
     mistral: "",
     user: ""
   });
+
+
+ 
+  const customCode = location.state?.customCode || '';
+
+
   const [loading, setLoading] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [selectedModels, setSelectedModels] = useState({
@@ -82,7 +88,7 @@ const Dashboard = () => {
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
 
-  const [customCode, setCustomCode] = useState("");
+ 
   const [customCodeAnalysis, setCustomCodeAnalysis] = useState(null);
 
 
@@ -309,7 +315,7 @@ const Dashboard = () => {
                 onChange={handleCustomCodeChange}
                 rows="10"
                 cols="50"
-                placeholder="Enter your custom code here..."
+                placeholder="Enter your custom code inhere..."
               />
               <button onClick={analyzeCustomCode} className="analyze-btn">
                 Analyze Custom Code

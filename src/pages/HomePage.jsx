@@ -21,6 +21,7 @@ const modelIcons = {
 const HomePage = ({ user }) => {
   const [prompt, setPrompt] = useState('');
   const [showModels, setShowModels] = useState(false);
+  const [customCode, setCustomCode] = useState('');
   const [selectedModels, setSelectedModels] = useState({
     chatgpt: false,
     deepseek: false,
@@ -30,7 +31,6 @@ const HomePage = ({ user }) => {
   });
   const [userCode, setUserCode] = useState('');
   const [showUserCodeInput, setShowUserCodeInput] = useState(false);
-  const [fileContent, setFileContent] = useState('');
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,7 +52,7 @@ const HomePage = ({ user }) => {
       });
       setSelectedModels(newModels);
       setShowModels(true);
-      
+
       setTimeout(() => {
         modelSelectionRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 300);
@@ -67,13 +67,17 @@ const HomePage = ({ user }) => {
     e.preventDefault();
     if (!prompt.trim()) return;
     setShowModels(true);
-    
+
     setTimeout(() => {
-      modelSelectionRef.current?.scrollIntoView({ 
+      modelSelectionRef.current?.scrollIntoView({
         behavior: 'smooth',
-        block: 'center'
+        block: 'center',
       });
     }, 100);
+  };
+
+  const handleNavigate = () => {
+    navigate('/dashboard', { state: { customCode } });
   };
 
   const handleFinalSubmit = (e) => {
@@ -82,26 +86,31 @@ const HomePage = ({ user }) => {
       .filter(([_, isSelected]) => isSelected)
       .map(([model]) => model)
       .join(',');
-
-    if (!enabledModels && !userCode) return alert('Please select at least one LLM or provide your own code.');
-
+  
+    if (!enabledModels && !userCode)
+      return alert('Please select at least one LLM or provide your own code.');
+  
+    const searchParams = new URLSearchParams();
+    searchParams.set('prompt', prompt);
+    searchParams.set('models', enabledModels);
+  
     if (!user) {
       navigate('/auth', {
         state: {
           from: {
             pathname: '/dashboard',
-            search: `?prompt=${encodeURIComponent(prompt)}&models=${enabledModels}${
-              userCode ? `&userCode=${encodeURIComponent(userCode)}` : ''
-            }`,
+            search: `?${searchParams.toString()}`,
           },
         },
       });
     } else {
-      navigate(`/dashboard?prompt=${encodeURIComponent(prompt)}&models=${enabledModels}${
-        userCode ? `&userCode=${encodeURIComponent(userCode)}` : ''
-      }`);
+      navigate(`/dashboard?${searchParams.toString()}`, {
+        state: { customCode: userCode },
+      });
+      
     }
   };
+  
 
   const toggleModel = (model) => {
     setSelectedModels((prev) => ({
@@ -116,7 +125,6 @@ const HomePage = ({ user }) => {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      setFileContent(event.target.result);
       setUserCode(event.target.result);
     };
     reader.readAsText(file);
@@ -133,7 +141,10 @@ const HomePage = ({ user }) => {
       <main className="home-content">
         <div className="prompt-container">
           <h2>Compare LLM Code Generations</h2>
-          <form className="prompt-form" onSubmit={showModels ? handleFinalSubmit : handleFirstSubmit}>
+          <form
+            className="prompt-form"
+            onSubmit={showModels ? handleFinalSubmit : handleFirstSubmit}
+          >
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
@@ -170,42 +181,30 @@ const HomePage = ({ user }) => {
                     >
                       <img src={uploadIcon} alt="user-code" className="model-icon" />
                       <span className="model-name">MY CODE</span>
-                      {showUserCodeInput && (
-                        <div className="model-checkmark">✓</div>
-                      )}
+                      {showUserCodeInput && <div className="model-checkmark">✓</div>}
                     </div>
                   </div>
                 </div>
 
                 {showUserCodeInput && (
                   <div className="user-code-container">
-                    <h3>Enter Your Code</h3>
                     <textarea
                       value={userCode}
                       onChange={(e) => setUserCode(e.target.value)}
-                      placeholder="Paste your code here..."
-                      className="prompt-input"
+                      placeholder="Paste your custom code here..."
+                      className="user-code-input"
                       rows={6}
                     />
-                    <div className="file-upload-container">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileUpload}
-                        style={{ display: 'none' }}
-                        accept=".txt,.js,.py,.java,.c,.cpp,.cs,.go,.php,.rb,.rs,.swift,.kt"
-                      />
-                      <button
-                        type="button"
-                        onClick={triggerFileInput}
-                        className="file-upload-btn"
-                      >
-                        Upload Code File
-                      </button>
-                      {fileContent && (
-                        <span className="file-name">{fileInputRef.current?.files[0]?.name}</span>
-                      )}
-                    </div>
+                    <input
+                      type="file"
+                      accept=".txt,.js,.py,.cpp,.c,.java"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      style={{ display: 'none' }}
+                    />
+                    <button type="button" onClick={triggerFileInput}>
+                      Upload Code File
+                    </button>
                   </div>
                 )}
 
