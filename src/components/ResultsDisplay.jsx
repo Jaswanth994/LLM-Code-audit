@@ -22,6 +22,7 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
     const normalizedMethodLength = Math.min(10, methodLength) / 10 * 100; // Normalize to 0-100
     const normalizedNestingLevel = Math.min(5, nestingLevel) / 5 * 100; // Normalize to 0-100
     const aci = (0.5 * cognitiveComplexity) + (0.3 * normalizedMethodLength) + (0.2 * normalizedNestingLevel);
+  
 
     // Calculate AMR (AI Maintainability Risk)
     const codeSmellsPer100LOC = (complexityPoints / lines) * 100;
@@ -207,18 +208,6 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
                   </div>
                 </div>
 
-                <div className="progress-container">
-                  <div className="progress-label">
-                    <span>Maintainability</span>
-                    <span>{data.maintainability}/100</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill maintainability" 
-                      style={{ width: `${data.maintainability}%` }}
-                    ></div>
-                  </div>
-                </div>
               </div>
             );
           })}

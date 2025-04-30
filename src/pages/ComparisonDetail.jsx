@@ -29,7 +29,7 @@ const analyzeCode = (code) => {
   ));
   
   const technicalDebt = Math.min(100, Math.max(0, 
-    complexity * 0.7 - readability * 0.3
+    complexity * 70 - readability * 0.3
   ));
   
   const maintainability = Math.min(100, Math.max(0,

@@ -19,26 +19,58 @@ const analyzeCode = (code) => {
       complexity: 0,
       technicalDebt: 0,
       maintainability: 0,
+      aci: 0,
+      amr:0,
       issues: []
     };
   }
-
   const lines = code.split('\n').length;
-  const charCount = code.length;
-  const commentCount = (code.match(/\/\/|\/\*|\*\//g) || []).length;
-  
-  const readability = Math.min(100, Math.max(0, 
-    80 - (lines / 50) - (charCount / lines / 100) + (commentCount * 2)
+  const characters = code.length;
+  const commentLines = (code.match(/\/\/.*|\/\*[\s\S]*?\*\//g) || []).length;
+  const commentDensity = lines > 0 ? (commentLines / lines) * 100 : 0;
+  const functions = (code.match(/\bfunction\b|\bdef\b|\bfunc\b/g) || []).length;
+  const conditionals = (code.match(/\bif\b|\belse\b|\bswitch\b|\bcase\b/g) || []).length;
+  const loops = (code.match(/\bfor\b|\bwhile\b|\bdo\b|\bforeach\b/g) || []).length;
+  const operators = (code.match(/[+\-*/%=<>!&|^~?:]/g) || []).length;
+  const nestingLevel = (code.match(/\{/g) || []).length - (code.match(/\}/g) || []).length;
+  const complexityPoints = conditionals + loops + functions * 2;
+
+  // Calculate ACI (AI Complexity Index)
+  const cognitiveComplexity = conditionals + loops + nestingLevel;
+  const methodLength = lines / Math.max(1, functions);
+  const normalizedMethodLength = Math.min(10, methodLength) / 10 * 100; // Normalize to 0-100
+  const normalizedNestingLevel = Math.min(5, nestingLevel) / 5 * 100; // Normalize to 0-100
+  const aci = (0.5 * cognitiveComplexity) + (0.3 * normalizedMethodLength) + (0.2 * normalizedNestingLevel);
+
+
+  // Calculate AMR (AI Maintainability Risk)
+  const codeSmellsPer100LOC = (complexityPoints / lines) * 100;
+  const duplicationDensity = (code.match(/duplicate|repeat|copy/g) || []).length / lines * 100;
+  const methodsWithoutComments = functions > 0 ? ((functions - commentLines) / functions) * 100 : 0;
+  const amr = (0.4 * codeSmellsPer100LOC) + (0.4 * duplicationDensity) + (0.2 * methodsWithoutComments);
+
+  const readability = Math.min(100, Math.max(0,
+    70 - (lines / 30) + (commentDensity * 0.5) - (complexityPoints / 10) - (operators / lines * 5)
+  ));
+  const complexity = Math.min(100, Math.max(10,
+    (complexityPoints * 2) + (operators / lines * 10) + (functions * 3)
   ));
   
-  const complexity = Math.min(100, Math.max(0, 
-    (lines / 20) + (code.match(/\bif\b|\bfor\b|\bwhile\b/g) || []).length * 5
-  ));
+  // Updated Technical Debt calculation
+  const normalizedReadability = 100 - readability;
+  const normalizedLines = Math.min(500, lines) / 500 * 100;
+  const normalizedComplexity = complexity;
+  const normalizedFunctionsComplexity = functions * 10;
   
-  const technicalDebt = Math.min(100, Math.max(0, 
-    complexity * 0.7 - readability * 0.3
+  const technicalDebt = Math.min(100, Math.max(0,
+    (0.1 * normalizedReadability) + 
+    (0.1 * normalizedLines) + 
+    (0.1 * normalizedComplexity) + 
+    (0.1 * normalizedFunctionsComplexity) + 
+    (0.3 * aci) + 
+    (0.3 * amr)
   ));
-  
+
   const maintainability = Math.min(100, Math.max(0,
     100 - (complexity * 0.3) - (technicalDebt * 0.2) - (lines / 50)
   ));
@@ -51,8 +83,9 @@ const analyzeCode = (code) => {
   return {
     readability: Math.round(readability),
     complexity: Math.round(complexity),
+    aci: Math.round(aci),
+    amr:Math.round(amr),
     technicalDebt: Math.round(technicalDebt),
-    maintainability: Math.round(maintainability),
     issues
   };
 };
@@ -132,8 +165,9 @@ const Dashboard = () => {
     }
 
     Object.keys(responses).forEach(model => {
-      if (model !== 'user' && responses[model].trim()) {
-        analysisResults[model] = analyzeCode(responses[model]);
+      const response = responses[model];
+      if (model !== 'user' && typeof response === 'string' && response.trim()) {
+        analysisResults[model] = analyzeCode(response);
       }
     });
     
@@ -307,7 +341,7 @@ const Dashboard = () => {
           <div className="loading-indicator">
             <div className="spinner"></div>
             <p>Generating responses...</p>
-            {responses.user.trim() }
+            {responses.user.trim()  }
           </div>
         ) : (
           <ResultsDisplay 
@@ -318,11 +352,16 @@ const Dashboard = () => {
           />
         )}
 
-        {!analysis && !loading && Object.values(responses).some(Boolean) && (
+        {!analysis && !loading && (
+          Object.keys(responses).some(model => 
+           (model !== 'user' && responses[model].trim()) || 
+             (model === 'user' && responses.user.trim() && selectedModels.user)
+            ) && (
           <button onClick={analyzeResponses} className="analyze-btn">
-            Analyze Codes
-          </button>
-        )}
+              Analyze Codes
+              </button>
+              ))}
+              
       </main>
     </div>
   );
