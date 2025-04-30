@@ -182,10 +182,17 @@ vite.config.js
 ##  Metrics Explanation
 
 ###  AI Complexity Index (ACI)
-
 ```mathematica
 ACI = (0.5 × Cognitive Complexity) + (0.3 × Method Length) + (0.2 × Nesting Level)
-
+```
+### AI Maintainability Risk (AMR)
+```mathematica
+AMR = (0.4 × Code Smells per 100 LOC) + (0.4 × Duplication %) + (0.2 × % Uncommented Methods)
+```
+###  AI Readability Score (ARS)
+```mathematica
+ARS = (0.4 × Avg Line Length) + (0.4 × % Comments) + (0.2 × Naming Consistency)
+```
 
 
 ##  Conclusion
