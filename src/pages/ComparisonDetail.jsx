@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ResultsDisplay from '../components/ResultsDisplay';
 import '../styles/ComparisonDetail.css';
 
@@ -9,6 +9,7 @@ const ComparisonDetail = () => {
   const { comparisonId } = useParams();
   const [comparison, setComparison] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadComparison = async () => {
@@ -73,7 +74,13 @@ const ComparisonDetail = () => {
 
   return (
     <div className="comparison-detail-container">
-      <h1>Comparison Details</h1>
+      <div className="header-section">
+        <button onClick={() => navigate('/history')} className="back-button">
+          ← Back to History
+        </button>
+        <h1>Comparison Details</h1>
+      </div>
+      
       <p className="original-prompt">{comparison.prompt}</p>
       
       <ResultsDisplay 

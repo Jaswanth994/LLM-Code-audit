@@ -16,7 +16,6 @@ const Header = ({ user }) => {
     }
   };
 
-  // Improved active path detection
   const isActive = (path) => {
     return location.pathname === path || 
            (path === '/dashboard' && location.pathname.startsWith('/dashboard'));
