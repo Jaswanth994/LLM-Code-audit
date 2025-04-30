@@ -1,4 +1,3 @@
-// HomePage.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
@@ -46,11 +45,10 @@ const HomePage = ({ user }) => {
     if (promptParam) setPrompt(promptParam);
     if (modelsParam) {
       const modelsArray = modelsParam.split(',');
-      const newModels = {};
-      Object.keys(selectedModels).forEach((model) => {
-        newModels[model] = modelsArray.includes(model);
-      });
-      setSelectedModels(newModels);
+      setSelectedModels(prev => ({
+        ...prev,
+        ...Object.fromEntries(modelsArray.map(model => [model, true]))
+      }));
       setShowModels(true);
       
       setTimeout(() => {
@@ -58,8 +56,12 @@ const HomePage = ({ user }) => {
       }, 300);
     }
     if (userCodeParam) {
-      setUserCode(decodeURIComponent(userCodeParam));
-      setShowUserCodeInput(true);
+      try {
+        setUserCode(decodeURIComponent(userCodeParam));
+        setShowUserCodeInput(true);
+      } catch (error) {
+        console.error('Error decoding user code:', error);
+      }
     }
   }, [location.search]);
 
@@ -80,33 +82,39 @@ const HomePage = ({ user }) => {
     e.preventDefault();
     const enabledModels = Object.entries(selectedModels)
       .filter(([_, isSelected]) => isSelected)
-      .map(([model]) => model)
-      .join(',');
+      .map(([model]) => model);
 
-    if (!enabledModels && !userCode) return alert('Please select at least one LLM or provide your own code.');
+    // Validate user input
+    if (showUserCodeInput && !userCode.trim()) {
+      return alert('Please provide valid code or disable the MY CODE option');
+    }
+    if (!enabledModels.length && !userCode.trim()) {
+      return alert('Please select at least one LLM or provide your own code');
+    }
+
+    // Prepare navigation parameters
+    const searchParams = new URLSearchParams({
+      prompt: encodeURIComponent(prompt.trim()),
+      models: enabledModels.join(',')
+    });
+    
+    if (userCode.trim()) {
+      searchParams.set('userCode', encodeURIComponent(userCode));
+    }
+
+    const navigatePath = `/dashboard?${searchParams.toString()}`;
 
     if (!user) {
-      navigate('/auth', {
-        state: {
-          from: {
-            pathname: '/dashboard',
-            search: `?prompt=${encodeURIComponent(prompt)}&models=${enabledModels}${
-              userCode ? `&userCode=${encodeURIComponent(userCode)}` : ''
-            }`,
-          },
-        },
-      });
+      navigate('/auth', { state: { from: { pathname: navigatePath } } });
     } else {
-      navigate(`/dashboard?prompt=${encodeURIComponent(prompt)}&models=${enabledModels}${
-        userCode ? `&userCode=${encodeURIComponent(userCode)}` : ''
-      }`);
+      navigate(navigatePath);
     }
   };
 
   const toggleModel = (model) => {
-    setSelectedModels((prev) => ({
+    setSelectedModels(prev => ({
       ...prev,
-      [model]: !prev[model],
+      [model]: !prev[model]
     }));
   };
 
@@ -120,10 +128,6 @@ const HomePage = ({ user }) => {
       setUserCode(event.target.result);
     };
     reader.readAsText(file);
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current.click();
   };
 
   return (
@@ -159,9 +163,7 @@ const HomePage = ({ user }) => {
                       >
                         <img src={icon} alt={model} className="model-icon" />
                         <span className="model-name">{model.toUpperCase()}</span>
-                        {selectedModels[model] && (
-                          <div className="model-checkmark">✓</div>
-                        )}
+                        {selectedModels[model] && <div className="model-checkmark">✓</div>}
                       </div>
                     ))}
                     <div
@@ -170,9 +172,7 @@ const HomePage = ({ user }) => {
                     >
                       <img src={uploadIcon} alt="user-code" className="model-icon" />
                       <span className="model-name">MY CODE</span>
-                      {showUserCodeInput && (
-                        <div className="model-checkmark">✓</div>
-                      )}
+                      {showUserCodeInput && <div className="model-checkmark">✓</div>}
                     </div>
                   </div>
                 </div>
@@ -197,13 +197,15 @@ const HomePage = ({ user }) => {
                       />
                       <button
                         type="button"
-                        onClick={triggerFileInput}
+                        onClick={() => fileInputRef.current.click()}
                         className="file-upload-btn"
                       >
                         Upload Code File
                       </button>
                       {fileContent && (
-                        <span className="file-name">{fileInputRef.current?.files[0]?.name}</span>
+                        <span className="file-name">
+                          {fileInputRef.current?.files[0]?.name}
+                        </span>
                       )}
                     </div>
                   </div>

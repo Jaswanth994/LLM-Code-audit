@@ -1,15 +1,60 @@
 import React, { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import ResultsDisplay from '../components/ResultsDisplay';
 import '../styles/ComparisonDetail.css';
+
+const analyzeCode = (code) => {
+  if (!code || typeof code !== 'string' || !code.trim()) {
+    return {
+      readability: 0,
+      complexity: 0,
+      technicalDebt: 0,
+      maintainability: 0,
+      issues: []
+    };
+  }
+
+  const lines = code.split('\n').length;
+  const charCount = code.length;
+  const commentCount = (code.match(/\/\/|\/\*|\*\//g) || []).length;
+  
+  const readability = Math.min(100, Math.max(0, 
+    80 - (lines / 50) - (charCount / lines / 100) + (commentCount * 2))
+  );
+  
+  const complexity = Math.min(100, Math.max(0, 
+    (lines / 20) + (code.match(/\bif\b|\bfor\b|\bwhile\b/g) || []).length * 5
+  ));
+  
+  const technicalDebt = Math.min(100, Math.max(0, 
+    complexity * 0.7 - readability * 0.3
+  ));
+  
+  const maintainability = Math.min(100, Math.max(0,
+    100 - (complexity * 0.3) - (technicalDebt * 0.2) - (lines / 50))
+  );
+  
+  const issues = [];
+  if (lines > 100) issues.push("Long method/function");
+  if (complexity > 70) issues.push("High complexity");
+  if (readability < 50) issues.push("Low readability");
+  
+  return {
+    readability: Math.round(readability),
+    complexity: Math.round(complexity),
+    technicalDebt: Math.round(technicalDebt),
+    maintainability: Math.round(maintainability),
+    issues
+  };
+};
 
 const ComparisonDetail = () => {
   const { comparisonId } = useParams();
   const [comparison, setComparison] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const loadComparison = async () => {
@@ -19,37 +64,28 @@ const ComparisonDetail = () => {
         
         if (docSnap.exists()) {
           const data = docSnap.data();
-          
-          // Transform the codes data to ensure consistent format
           const transformedCodes = {};
-          Object.keys(data.codes).forEach(model => {
-            // If code is stored as object, use it directly
-            if (typeof data.codes[model] === 'object') {
-              transformedCodes[model] = data.codes[model];
-            } 
-            // If code is stored as string, convert to object format
-            else {
-              transformedCodes[model] = {
-                code: data.codes[model],
-                readability: 0,
-                complexity: 0,
-                technicalDebt: 0,
-                maintainability: 0,
-                issues: []
-              };
-            }
-          });
+
+          // Process all code entries
+          for (const [model, code] of Object.entries(data.codes)) {
+            transformedCodes[model] = {
+              code: typeof code === 'string' ? code : code.code,
+              ...(typeof code === 'string' ? analyzeCode(code) : code)
+            };
+          }
 
           setComparison({
             id: docSnap.id,
             ...data,
-            codes: transformedCodes
+            codes: transformedCodes,
+            analysis: data.analysis || {}
           });
         } else {
-          console.log("No such document!");
+          setError('Comparison not found');
         }
       } catch (error) {
         console.error("Error loading comparison:", error);
+        setError('Failed to load comparison');
       } finally {
         setLoading(false);
       }
@@ -62,29 +98,47 @@ const ComparisonDetail = () => {
     return <div className="loading">Loading comparison...</div>;
   }
 
-  if (!comparison) {
-    return <div className="not-found">Comparison not found</div>;
+  if (error) {
+    return <div className="error">{error}</div>;
   }
 
-  // Prepare selectedModels object for ResultsDisplay
-  const selectedModels = {};
-  comparison.models.forEach(model => {
-    selectedModels[model] = true;
-  });
+  if (!comparison) {
+    return <div className="not-found">Comparison data unavailable</div>;
+  }
+
+  // Prepare display data
+  const selectedModels = comparison.models.reduce((acc, model) => {
+    acc[model] = true;
+    return acc;
+  }, {});
+
+  const responses = Object.entries(comparison.codes).reduce((acc, [model, data]) => {
+    acc[model] = data.code;
+    return acc;
+  }, {});
 
   return (
     <div className="comparison-detail-container">
-      <div className="header-section">
-        <button onClick={() => navigate('/history')} className="back-button">
-          ← Back to History
-        </button>
-        <h1>Comparison Details</h1>
+      <h1>Comparison Details</h1>
+      
+      <div className="metadata-section">
+        <div className="original-prompt">
+          <h3>Original Prompt</h3>
+          <p>{comparison.prompt}</p>
+        </div>
+
+        {comparison.codes.user && (
+          <div className="user-code-section">
+            <h3>User's Custom Code</h3>
+            <pre className="user-code">
+              {comparison.codes.user.code}
+            </pre>
+          </div>
+        )}
       </div>
-      
-      <p className="original-prompt">{comparison.prompt}</p>
-      
+
       <ResultsDisplay 
-        responses={comparison.codes}
+        responses={responses}
         selectedModels={selectedModels}
         analysis={comparison.analysis}
       />

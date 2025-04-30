@@ -13,7 +13,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { saveComparison } from "../firestoreService";
 
 const analyzeCode = (code) => {
-  if (!code || typeof code !== 'string') {
+  if (!code || typeof code !== 'string' || !code.trim()) {
     return {
       readability: 0,
       complexity: 0,
@@ -56,6 +56,7 @@ const analyzeCode = (code) => {
     issues
   };
 };
+
 const Dashboard = () => {
   const location = useLocation();
   const [user] = useAuthState(auth);
@@ -69,6 +70,7 @@ const Dashboard = () => {
     user: ""
   });
   const [loading, setLoading] = useState(false);
+  const [loadingModels, setLoadingModels] = useState({});
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [selectedModels, setSelectedModels] = useState({
     chatgpt: true,
@@ -79,9 +81,7 @@ const Dashboard = () => {
     user: true
   });
   const [analysis, setAnalysis] = useState(null);
-  const [hasRunInitialAnalysis, setHasRunInitialAnalysis] = useState(false);
 
-  // Authentication check
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) navigate("/");
@@ -89,165 +89,194 @@ const Dashboard = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // Handle initial load and URL parameters - runs only once
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const prompt = searchParams.get("prompt") || searchParams.get("prompt"); // Handle typo in URL
-    const models = searchParams.get("models")?.split(",").filter(Boolean) || [];
+    const prompt = decodeURIComponent(searchParams.get("prompt") || "");
+    const models = searchParams.get("models")?.split(",") || [];
     const userCode = searchParams.get("userCode");
+
+    setCurrentPrompt(prompt);
     
-    if (prompt) {
-      setCurrentPrompt(prompt);
-      
-      const modelsConfig = {
-        chatgpt: models.includes("chatgpt"),
-        deepseek: models.includes("deepseek"),
-        gemini: models.includes("gemini"),
-        llama: models.includes("llama"),
-        mistral: models.includes("mistral"),
-        user: !!userCode
-      };
-      
-      setSelectedModels(modelsConfig);
-      
-      // Initialize responses with user code if available
-      const initialResponses = {
-        chatgpt: "",
-        deepseek: "",
-        gemini: "",
-        llama: "",
-        mistral: "",
-        user: userCode ? decodeURIComponent(userCode) : ""
-      };
-      
-      setResponses(initialResponses);
-      
-      // Only submit query if we have models selected (excluding user)
-      const hasModelsToQuery = Object.entries(modelsConfig).some(
-        ([model, isSelected]) => isSelected && model !== 'user'
-      );
-      
-      if (hasModelsToQuery) {
-        handleQuerySubmit(prompt, modelsConfig, initialResponses);
-      } else if (userCode) {
-        // If only user code is provided, just analyze it
-        setHasRunInitialAnalysis(true);
-        analyzeResponses({ ...initialResponses }, modelsConfig);
+    const newSelectedModels = {
+      chatgpt: models.includes("chatgpt"),
+      deepseek: models.includes("deepseek"),
+      gemini: models.includes("gemini"),
+      llama: models.includes("llama"),
+      mistral: models.includes("mistral"),
+      user: !!userCode
+    };
+    
+    setSelectedModels(newSelectedModels);
+
+    if (userCode) {
+      try {
+        const decodedCode = decodeURIComponent(userCode);
+        setResponses(prev => ({ ...prev, user: decodedCode }));
+      } catch (error) {
+        console.error("Error decoding user code:", error);
       }
+    }
+
+    if (prompt) {
+      handleQuerySubmit(prompt, newSelectedModels);
+    } else if (userCode) {
+      analyzeResponses();
     }
   }, [location]);
 
-  // Analyze responses with optional parameters
-  const analyzeResponses = async (responsesToAnalyze = responses, modelsConfig = selectedModels) => {
+  const analyzeResponses = async () => {
     const analysisResults = {};
-    const modelsToAnalyze = Object.keys(responsesToAnalyze).filter(
-      model => responsesToAnalyze[model] && modelsConfig[model]
-    );
-
-    // Analyze each model's response
-    modelsToAnalyze.forEach(model => {
-      analysisResults[model] = analyzeCode(responsesToAnalyze[model]);
-    });
-
-    // Determine best model if we have results
-    if (modelsToAnalyze.length > 0) {
-      analysisResults.bestModel = modelsToAnalyze.reduce((best, current) => {
-        const currentData = analysisResults[current];
-        const bestData = analysisResults[best];
-        
-        const currentScore = currentData.readability * 0.5 - 
-                          currentData.complexity * 0.3 - 
-                          currentData.technicalDebt * 0.2;
-        const bestScore = bestData.readability * 0.5 - 
-                        bestData.complexity * 0.3 - 
-                        bestData.technicalDebt * 0.2;
-        
-        return currentScore > bestScore ? current : best;
-      }, modelsToAnalyze[0]);
+    
+    if (responses.user.trim()) {
+      analysisResults.user = analyzeCode(responses.user);
     }
 
+    Object.keys(responses).forEach(model => {
+      if (model !== 'user' && responses[model].trim()) {
+        analysisResults[model] = analyzeCode(responses[model]);
+      }
+    });
+    
+    if (Object.keys(analysisResults).length > 0) {
+      const models = Object.keys(analysisResults);
+      const bestModel = models.reduce((best, current) => {
+        const currentScore = analysisResults[current].readability * 0.5 - 
+                           analysisResults[current].complexity * 0.3 - 
+                           analysisResults[current].technicalDebt * 0.2;
+        const bestScore = analysisResults[best].readability * 0.5 - 
+                         analysisResults[best].complexity * 0.3 - 
+                         analysisResults[best].technicalDebt * 0.2;
+        return currentScore > bestScore ? current : best;
+      }, models[0]);
+      
+      analysisResults.bestModel = bestModel;
+    }
+    
     setAnalysis(analysisResults);
-    setHasRunInitialAnalysis(true);
 
-    // Save to database if user is logged in
     if (user) {
       try {
         await saveComparison(
           user.uid, 
           currentPrompt, 
-          responsesToAnalyze, 
+          responses, 
           analysisResults, 
-          modelsConfig
+          selectedModels
         );
       } catch (error) {
         console.error("Failed to save comparison:", error);
       }
     }
+  };  
 
-    return analysisResults;
-  };
-
-  // Handle query submission to LLMs
-  const handleQuerySubmit = async (prompt, modelsToUse = selectedModels, initialResponses = responses) => {
+  const handleQuerySubmit = async (prompt, modelsToUse) => {
     if (!prompt.trim()) return;
 
     setLoading(true);
     setAnalysis(null);
-    setHasRunInitialAnalysis(false);
+    const initialLoadingStates = {};
     
     try {
       const requests = [];
-      const newResponses = { ...initialResponses };
-      
-      // Prepare requests for each selected model
-      const modelApis = {
-        chatgpt: getChatGPTResponse,
-        deepseek: getDeepSeekResponse,
-        gemini: getGeminiResponse,
-        llama: getLlama4ScoutResponse,
-        mistral: getDolphinResponse
-      };
+      const requestModels = [];
 
-      Object.entries(modelsToUse).forEach(([model, shouldUse]) => {
-        if (shouldUse && model !== 'user' && modelApis[model]) {
-          requests.push(
-            modelApis[model](prompt)
-              .then(res => {
-                newResponses[model] = res;
-              })
-              .catch(err => {
-                newResponses[model] = `Error: ${err.message || 'Failed to get response'}`;
-              })
-          );
-        }
+      // Configure ChatGPT request
+      if (modelsToUse.chatgpt) {
+        initialLoadingStates.chatgpt = true;
+        requests.push(
+          getChatGPTResponse(prompt)
+            .then(res => ({ model: "chatgpt", response: res }))
+            .catch(error => ({ 
+              model: "chatgpt", 
+              response: `Error: ${error.message || "Failed to fetch response"}`
+            }))
+        );
+        requestModels.push("chatgpt");
+      }
+
+      // Configure DeepSeek request
+      if (modelsToUse.deepseek) {
+        initialLoadingStates.deepseek = true;
+        requests.push(
+          getDeepSeekResponse(prompt)
+            .then(res => ({ model: "deepseek", response: res }))
+            .catch(error => ({
+              model: "deepseek",
+              response: `Error: ${error.message || "Failed to fetch response"}`
+            }))
+        );
+        requestModels.push("deepseek");
+      }
+
+      // Configure Gemini request
+      if (modelsToUse.gemini) {
+        initialLoadingStates.gemini = true;
+        requests.push(
+          getGeminiResponse(prompt)
+            .then(res => ({ model: "gemini", response: res }))
+            .catch(error => ({
+              model: "gemini",
+              response: `Error: ${error.message || "Failed to fetch response"}`
+            }))
+        );
+        requestModels.push("gemini");
+      }
+
+      // Configure Llama request
+      if (modelsToUse.llama) {
+        initialLoadingStates.llama = true;
+        requests.push(
+          getLlama4ScoutResponse(prompt)
+            .then(res => ({ model: "llama", response: res }))
+            .catch(error => ({
+              model: "llama",
+              response: `Error: ${error.message || "Failed to fetch response"}`
+            }))
+        );
+        requestModels.push("llama");
+      }
+
+      // Configure Mistral request
+      if (modelsToUse.mistral) {
+        initialLoadingStates.mistral = true;
+        requests.push(
+          getDolphinResponse(prompt)
+            .then(res => ({ model: "mistral", response: res }))
+            .catch(error => ({
+              model: "mistral",
+              response: `Error: ${error.message || "Failed to fetch response"}`
+            }))
+        );
+        requestModels.push("mistral");
+      }
+
+      setLoadingModels(initialLoadingStates);
+
+      const results = await Promise.all(requests);
+      
+      setResponses(prev => {
+        const newResponses = { ...prev };
+        results.forEach(({ model, response }) => {
+          newResponses[model] = response;
+          initialLoadingStates[model] = false;
+        });
+        return newResponses;
       });
 
-      await Promise.all(requests);
-      setResponses(newResponses);
-      
-      // Only auto-analyze if we have more than just user code
-      const hasLLMResponses = Object.entries(modelsToUse).some(
-        ([model, shouldUse]) => shouldUse && model !== 'user'
-      );
-      
-      if (hasLLMResponses) {
-        await analyzeResponses(newResponses, modelsToUse);
-      }
     } catch (err) {
-      console.error("Failed to get responses:", err);
+      console.error("Failed to process responses:", err);
     } finally {
       setLoading(false);
+      setLoadingModels({});
     }
   };
 
-  // Handle editing the prompt
   const handleEditPrompt = () => {
     const enabledModels = Object.entries(selectedModels)
       .filter(([model, isSelected]) => isSelected && model !== 'user')
-      .map(([model]) => model)
-      .join(',');
-  
-    navigate(`/?prompt=${encodeURIComponent(currentPrompt)}&models=${enabledModels}${
+      .map(([model]) => model);
+
+    navigate(`/?prompt=${encodeURIComponent(currentPrompt)}&models=${enabledModels.join(',')}${
       responses.user ? `&userCode=${encodeURIComponent(responses.user)}` : ''
     }`);
   };
@@ -258,7 +287,7 @@ const Dashboard = () => {
       
       <main className="dashboard-content">
         <div className="prompt-display">
-          <h3>Entered Prompt:</h3>
+          <h3>Original Prompt:</h3>
           <p className="prompt-text">{currentPrompt}</p>
           <div className="button-group">
             <button onClick={handleEditPrompt} className="edit-prompt-btn">
@@ -267,33 +296,32 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {responses.user.trim() && (
+          <div className="user-code-display">
+            <h3>Your Custom Code:</h3>
+            <pre className="user-code-content">{responses.user}</pre>
+          </div>
+        )}
+
         {loading ? (
           <div className="loading-indicator">
             <div className="spinner"></div>
             <p>Generating responses...</p>
+            {responses.user.trim() }
           </div>
         ) : (
-          <>
-            <ResultsDisplay 
-              responses={responses} 
-              selectedModels={selectedModels} 
-              analysis={analysis}
-            />
-            
-            {/* Show analyze button if we have responses but no analysis */}
-            {!hasRunInitialAnalysis && !loading && 
-              Object.values(responses).some(res => res && res.trim()) && (
-                <div className="analyze-button-container">
-                  <button 
-                    onClick={() => analyzeResponses()} 
-                    className="analyze-btn"
-                    disabled={loading}
-                  >
-                    Analyze Codes
-                  </button>
-                </div>
-            )}
-          </>
+          <ResultsDisplay 
+            responses={responses} 
+            selectedModels={selectedModels} 
+            analysis={analysis}
+            loadingModels={loadingModels}
+          />
+        )}
+
+        {!analysis && !loading && Object.values(responses).some(Boolean) && (
+          <button onClick={analyzeResponses} className="analyze-btn">
+            Analyze Codes
+          </button>
         )}
       </main>
     </div>
