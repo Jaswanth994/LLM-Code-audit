@@ -1,6 +1,11 @@
 #  LLM Code Audit - Comprehensive Documentation
 
-A smart auditing tool that helps developers compare and evaluate AI-generated code from multiple LLMs like ChatGPT, Gemini, DeepSeek, LLaMA, and Mistral.
+**LLM Code Audit** is an intelligent, developer-focused tool designed to **generate, evaluate, and compare code** outputs from multiple Large Language Models (LLMs), including **ChatGPT**, **Gemini**, **DeepSeek**, **LLaMA**, and **Mistral**.
+
+Whether you're prototyping, benchmarking, or auditing AI-generated code, this platform helps you make **data-driven decisions** by providing detailed metrics around code complexity, maintainability, and readability. 
+
+With real-time analysis, visual dashboards, and history tracking, LLM Code Audit enables a transparent and measurable way to choose the best code output for your needs — all in a clean, user-friendly interface.
+
 
 ---
 
@@ -172,7 +177,7 @@ vite.config.js
 - View and revisit previous prompts  
 - Compare LLM performance over time  
 
-### ℹ About Page
+###  About Page
 - Project vision  
 - Team details  
 - Real-world applications  
