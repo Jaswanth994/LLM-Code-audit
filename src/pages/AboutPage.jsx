@@ -93,7 +93,12 @@ const AboutPage = ({ user }) => {
             color: '#7b81ff'
           }}>
             <p><strong>ACI</strong> = (0.5 × Cognitive Complexity) + (0.3 × Method Length) + (0.2 × Nesting Level)</p>
-            <p><strong>AMR</strong> = (0.4 × Code Smells per 100 LOC) + (0.4 × Duplication Density %) + (0.2 × % of Methods without Comments)</p>
+<p><strong>AMR</strong> = (0.4 × Code Smells per 100 LOC) + (0.4 × Duplication Density %) + (0.2 × % of Methods without Comments)</p>
+<p><strong>ARS</strong> = (0.4 × Average Line Length) + (0.4 × % of Lines With Comments) + (0.2 × % of Consistent Variable Naming)</p>
+<p><strong>ADR</strong> = (0.5 × Avg. Dependencies per Module) + (0.5 × Circular Dependencies Count)</p>
+<p><strong>ARF</strong> = (0.6 × % of Duplicated Code) + (0.4 × % of Similar Code Blocks in Different Modules)</p>
+
+
           </div>
         </div>
 
@@ -106,8 +111,8 @@ const AboutPage = ({ user }) => {
         }}>
           <h3 style={{ color: '#c58aff' }}>Future Roadmap</h3>
           <p>
-            We're expanding to include Claude, Code Llama, and StarCoder LLMs, with additional metrics for 
-            AI Readability Score, Dependency Risk, and Redundancy Factor.
+            We're expanding to include Claude, Code Llama, and StarCoder LLMs, with additional metrics for AI 
+            and we will be contionously redifining AI metrics and UI for better user experience and Better Technical debt anlysis 
           </p>
         </div>
       </main>
