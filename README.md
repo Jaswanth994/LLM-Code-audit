@@ -118,7 +118,7 @@ With real-time analysis, visual dashboards, and history tracking, LLM Code Audit
 
 ##  File Structure
 
-
+```txt
 node_modules/
 public/
 src/
@@ -153,7 +153,8 @@ index.html
 package-lock.json
 package.json
 vite.config.js
-'''
+
+```
 
 ---
 
