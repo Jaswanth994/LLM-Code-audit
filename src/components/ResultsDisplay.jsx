@@ -13,7 +13,21 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
     const conditionals = (code.match(/\bif\b|\belse\b|\bswitch\b|\bcase\b/g) || []).length;
     const loops = (code.match(/\bfor\b|\bwhile\b|\bdo\b|\bforeach\b/g) || []).length;
     const operators = (code.match(/[+\-*/%=<>!&|^~?:]/g) || []).length;
+    const nestingLevel = (code.match(/\{/g) || []).length - (code.match(/\}/g) || []).length;
     const complexityPoints = conditionals + loops + functions * 2;
+
+    // Calculate ACI (AI Complexity Index)
+    const cognitiveComplexity = conditionals + loops + nestingLevel;
+    const methodLength = lines / Math.max(1, functions);
+    const normalizedMethodLength = Math.min(10, methodLength) / 10 * 100; // Normalize to 0-100
+    const normalizedNestingLevel = Math.min(5, nestingLevel) / 5 * 100; // Normalize to 0-100
+    const aci = (0.5 * cognitiveComplexity) + (0.3 * normalizedMethodLength) + (0.2 * normalizedNestingLevel);
+
+    // Calculate AMR (AI Maintainability Risk)
+    const codeSmellsPer100LOC = (complexityPoints / lines) * 100;
+    const duplicationDensity = (code.match(/duplicate|repeat|copy/g) || []).length / lines * 100;
+    const methodsWithoutComments = functions > 0 ? ((functions - commentLines) / functions) * 100 : 0;
+    const amr = (0.4 * codeSmellsPer100LOC) + (0.4 * duplicationDensity) + (0.2 * methodsWithoutComments);
 
     const readability = Math.min(100, Math.max(0,
       70 - (lines / 30) + (commentDensity * 0.5) - (complexityPoints / 10) - (operators / lines * 5)
@@ -21,9 +35,22 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
     const complexity = Math.min(100, Math.max(10,
       (complexityPoints * 2) + (operators / lines * 10) + (functions * 3)
     ));
+    
+    // Updated Technical Debt calculation
+    const normalizedReadability = 100 - readability;
+    const normalizedLines = Math.min(500, lines) / 500 * 100;
+    const normalizedComplexity = complexity;
+    const normalizedFunctionsComplexity = functions * 10;
+    
     const technicalDebt = Math.min(100, Math.max(0,
-      (complexity * 0.6) - (readability * 0.4) + (lines > 100 ? 10 : 0) + (commentDensity < 10 ? 15 : 0)
+      (0.1 * normalizedReadability) + 
+      (0.1 * normalizedLines) + 
+      (0.1 * normalizedComplexity) + 
+      (0.1 * normalizedFunctionsComplexity) + 
+      (0.3 * aci) + 
+      (0.3 * amr)
     ));
+
     const maintainability = Math.min(100, Math.max(0,
       100 - (complexity * 0.3) - (technicalDebt * 0.2) - (lines / 50)
     ));
@@ -34,11 +61,19 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
       functions,
       conditionals,
       loops,
+      nestingLevel,
       commentDensity: Math.round(commentDensity),
       readability: Math.round(readability),
       complexity: Math.round(complexity),
       technicalDebt: Math.round(technicalDebt),
-      maintainability: Math.round(maintainability)
+      maintainability: Math.round(maintainability),
+      aci: Math.round(aci),
+      amr: Math.round(amr),
+      cognitiveComplexity,
+      methodLength: Math.round(methodLength),
+      codeSmellsPer100LOC: Math.round(codeSmellsPer100LOC),
+      duplicationDensity: Math.round(duplicationDensity),
+      methodsWithoutComments: Math.round(methodsWithoutComments)
     };
   };
 
@@ -53,7 +88,6 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
   };
 
   const renderCodeBlock = (label, codeData) => {
-    // Handle both string (legacy) and object formats
     const code = typeof codeData === 'string' ? codeData : codeData.code;
     const metrics = analyzeCode(code);
     const storedMetrics = typeof codeData === 'object' ? codeData : null;
@@ -65,7 +99,7 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
           {metrics && (
             <div className="model-meta">
               {metrics.lines} lines | {metrics.functions} functions | 
-              Readability: {storedMetrics?.readability ?? metrics.readability}/100
+              ACI: {storedMetrics?.aci ?? metrics.aci} | AMR: {storedMetrics?.amr ?? metrics.amr}
             </div>
           )}
         </div>
@@ -79,12 +113,13 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
           </pre>
         </div>
 
-        {/* Show stored metrics if available */}
         {storedMetrics && (
           <div className="stored-metrics">
             <h4>Stored Analysis:</h4>
             <div>Readability: {storedMetrics.readability}/100</div>
             <div>Complexity: {storedMetrics.complexity}/100</div>
+            <div>ACI: {storedMetrics.aci}/100</div>
+            <div>AMR: {storedMetrics.amr}/100</div>
             <div>Maintainability: {storedMetrics.maintainability}/100</div>
           </div>
         )}
@@ -135,6 +170,32 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
 
                 <div className="progress-container">
                   <div className="progress-label">
+                    <span>ACI</span>
+                    <span>{data.aci}/100</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill aci" 
+                      style={{ width: `${data.aci}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="progress-container">
+                  <div className="progress-label">
+                    <span>AMR</span>
+                    <span>{data.amr}/100</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill amr" 
+                      style={{ width: `${data.amr}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="progress-container">
+                  <div className="progress-label">
                     <span>Tech Debt</span>
                     <span>{data.technicalDebt}/100</span>
                   </div>
@@ -171,7 +232,7 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
             </div>
             <p className="best-model-reason">
               This implementation scored highest in our analysis for having the best 
-              balance of readability, complexity, and maintainability.
+              balance of readability, complexity, ACI, AMR, and maintainability.
             </p>
           </div>
         )}
