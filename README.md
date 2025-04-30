@@ -1,4 +1,4 @@
-# 🤖 LLM Code Audit - Comprehensive Documentation
+#  LLM Code Audit - Comprehensive Documentation
 
 A smart auditing tool that helps developers compare and evaluate AI-generated code from multiple LLMs like ChatGPT, Gemini, DeepSeek, LLaMA, and Mistral.
 
@@ -113,7 +113,7 @@ A smart auditing tool that helps developers compare and evaluate AI-generated co
 
 ##  File Structure
 
-```txt
+
 node_modules/
 public/
 src/
@@ -148,7 +148,7 @@ index.html
 package-lock.json
 package.json
 vite.config.js
-
+'''
 
 ---
 
