@@ -27,6 +27,7 @@ function App() {
         <Route path="/history" element={ user ? <History /> : <Navigate to="/history" />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/comparison/:comparisonId" element={<ComparisonDetail />} />
+        
       </Routes>
     </Router>
   );
