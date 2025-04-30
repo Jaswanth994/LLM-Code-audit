@@ -56,7 +56,6 @@ const analyzeCode = (code) => {
     issues
   };
 };
-
 const Dashboard = () => {
   const location = useLocation();
   const [user] = useAuthState(auth);
@@ -80,143 +79,160 @@ const Dashboard = () => {
     user: true
   });
   const [analysis, setAnalysis] = useState(null);
+  const [hasRunInitialAnalysis, setHasRunInitialAnalysis] = useState(false);
 
+  // Authentication check
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user) {
-        navigate("/");
-      }
+      if (!user) navigate("/");
     });
     return () => unsubscribe();
   }, [navigate]);
 
+  // Handle initial load and URL parameters - runs only once
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const prompt = searchParams.get("prompt");
-    const models = searchParams.get("models")?.split(",") || [];
+    const prompt = searchParams.get("prompt") || searchParams.get("prompt"); // Handle typo in URL
+    const models = searchParams.get("models")?.split(",").filter(Boolean) || [];
     const userCode = searchParams.get("userCode");
     
     if (prompt) {
       setCurrentPrompt(prompt);
-      setSelectedModels({
+      
+      const modelsConfig = {
         chatgpt: models.includes("chatgpt"),
         deepseek: models.includes("deepseek"),
         gemini: models.includes("gemini"),
         llama: models.includes("llama"),
         mistral: models.includes("mistral"),
-        user: userCode ? true : false
-      });
+        user: !!userCode
+      };
       
-      if (userCode) {
-        setResponses(prev => ({ ...prev, user: userCode }));
+      setSelectedModels(modelsConfig);
+      
+      // Initialize responses with user code if available
+      const initialResponses = {
+        chatgpt: "",
+        deepseek: "",
+        gemini: "",
+        llama: "",
+        mistral: "",
+        user: userCode ? decodeURIComponent(userCode) : ""
+      };
+      
+      setResponses(initialResponses);
+      
+      // Only submit query if we have models selected (excluding user)
+      const hasModelsToQuery = Object.entries(modelsConfig).some(
+        ([model, isSelected]) => isSelected && model !== 'user'
+      );
+      
+      if (hasModelsToQuery) {
+        handleQuerySubmit(prompt, modelsConfig, initialResponses);
+      } else if (userCode) {
+        // If only user code is provided, just analyze it
+        setHasRunInitialAnalysis(true);
+        analyzeResponses({ ...initialResponses }, modelsConfig);
       }
-      
-      handleQuerySubmit(prompt, {
-        chatgpt: models.includes("chatgpt"),
-        deepseek: models.includes("deepseek"),
-        gemini: models.includes("gemini"),
-        llama: models.includes("llama"),
-        mistral: models.includes("mistral"),
-        user: userCode ? true : false
-      });
     }
   }, [location]);
 
-  const analyzeResponses = async () => {
+  // Analyze responses with optional parameters
+  const analyzeResponses = async (responsesToAnalyze = responses, modelsConfig = selectedModels) => {
     const analysisResults = {};
-    Object.keys(responses).forEach(model => {
-      if (responses[model]) {
-        analysisResults[model] = analyzeCode(responses[model]);
-      }
-    });
-    
-    if (Object.keys(analysisResults).length > 0) {
-      const models = Object.keys(analysisResults);
-      const bestModel = models.reduce((best, current) => {
-        const currentScore = analysisResults[current].readability * 0.5 - 
-                           analysisResults[current].complexity * 0.3 - 
-                           analysisResults[current].technicalDebt * 0.2;
-        const bestScore = analysisResults[best].readability * 0.5 - 
-                         analysisResults[best].complexity * 0.3 - 
-                         analysisResults[best].technicalDebt * 0.2;
-        return currentScore > bestScore ? current : best;
-      }, models[0]);
-      
-      analysisResults.bestModel = bestModel;
-    }
-    
-    setAnalysis(analysisResults);
+    const modelsToAnalyze = Object.keys(responsesToAnalyze).filter(
+      model => responsesToAnalyze[model] && modelsConfig[model]
+    );
 
+    // Analyze each model's response
+    modelsToAnalyze.forEach(model => {
+      analysisResults[model] = analyzeCode(responsesToAnalyze[model]);
+    });
+
+    // Determine best model if we have results
+    if (modelsToAnalyze.length > 0) {
+      analysisResults.bestModel = modelsToAnalyze.reduce((best, current) => {
+        const currentData = analysisResults[current];
+        const bestData = analysisResults[best];
+        
+        const currentScore = currentData.readability * 0.5 - 
+                          currentData.complexity * 0.3 - 
+                          currentData.technicalDebt * 0.2;
+        const bestScore = bestData.readability * 0.5 - 
+                        bestData.complexity * 0.3 - 
+                        bestData.technicalDebt * 0.2;
+        
+        return currentScore > bestScore ? current : best;
+      }, modelsToAnalyze[0]);
+    }
+
+    setAnalysis(analysisResults);
+    setHasRunInitialAnalysis(true);
+
+    // Save to database if user is logged in
     if (user) {
       try {
         await saveComparison(
           user.uid, 
           currentPrompt, 
-          responses, 
+          responsesToAnalyze, 
           analysisResults, 
-          selectedModels
+          modelsConfig
         );
       } catch (error) {
         console.error("Failed to save comparison:", error);
       }
     }
-  };  
 
-  const handleQuerySubmit = async (prompt, modelsToUse = selectedModels) => {
+    return analysisResults;
+  };
+
+  // Handle query submission to LLMs
+  const handleQuerySubmit = async (prompt, modelsToUse = selectedModels, initialResponses = responses) => {
     if (!prompt.trim()) return;
 
     setLoading(true);
     setAnalysis(null);
+    setHasRunInitialAnalysis(false);
     
     try {
       const requests = [];
+      const newResponses = { ...initialResponses };
       
-      if (modelsToUse.chatgpt) {
-        requests.push(
-          getChatGPTResponse(prompt)
-            .then(res => ({ model: "chatgpt", response: res }))
-            .catch(err => ({ model: "chatgpt", response: `Error: ${err.message}` }))
-        );
-      }
-      if (modelsToUse.deepseek) {
-        requests.push(
-          getDeepSeekResponse(prompt)
-            .then(res => ({ model: "deepseek", response: res }))
-            .catch(err => ({ model: "deepseek", response: `Error: ${err.message}` }))
-        );
-      }
-      if (modelsToUse.gemini) {
-        requests.push(
-          getGeminiResponse(prompt)
-            .then(res => ({ model: "gemini", response: res }))
-            .catch(err => ({ model: "gemini", response: `Error: ${err.message}` }))
-        );
-      }
-      if (modelsToUse.llama) {
-        requests.push(
-          getLlama4ScoutResponse(prompt)
-            .then(res => ({ model: "llama", response: res }))
-            .catch(err => ({ model: "llama", response: `Error: ${err.message}` }))
-        );
-      }
-      if (modelsToUse.mistral) {
-        requests.push(
-          getDolphinResponse(prompt)
-            .then(res => ({ model: "mistral", response: res }))
-            .catch(err => ({ model: "mistral", response: `Error: ${err.message}` }))
-        );
-      }
-      
+      // Prepare requests for each selected model
+      const modelApis = {
+        chatgpt: getChatGPTResponse,
+        deepseek: getDeepSeekResponse,
+        gemini: getGeminiResponse,
+        llama: getLlama4ScoutResponse,
+        mistral: getDolphinResponse
+      };
 
-      const results = await Promise.all(requests);
-      const newResponses = { ...responses };
-      
-      results.forEach(({ model, response }) => {
-        newResponses[model] = response;
+      Object.entries(modelsToUse).forEach(([model, shouldUse]) => {
+        if (shouldUse && model !== 'user' && modelApis[model]) {
+          requests.push(
+            modelApis[model](prompt)
+              .then(res => {
+                newResponses[model] = res;
+              })
+              .catch(err => {
+                newResponses[model] = `Error: ${err.message || 'Failed to get response'}`;
+              })
+          );
+        }
       });
 
-      
+      await Promise.all(requests);
       setResponses(newResponses);
+      
+      // Only auto-analyze if we have more than just user code
+      const hasLLMResponses = Object.entries(modelsToUse).some(
+        ([model, shouldUse]) => shouldUse && model !== 'user'
+      );
+      
+      if (hasLLMResponses) {
+        await analyzeResponses(newResponses, modelsToUse);
+      }
     } catch (err) {
       console.error("Failed to get responses:", err);
     } finally {
@@ -224,6 +240,7 @@ const Dashboard = () => {
     }
   };
 
+  // Handle editing the prompt
   const handleEditPrompt = () => {
     const enabledModels = Object.entries(selectedModels)
       .filter(([model, isSelected]) => isSelected && model !== 'user')
@@ -256,18 +273,28 @@ const Dashboard = () => {
             <p>Generating responses...</p>
           </div>
         ) : (
-          <ResultsDisplay 
-            responses={responses} 
-            selectedModels={selectedModels} 
-            analysis={analysis}
-          />
-        )}
-         {!analysis && !loading && Object.values(responses).some(Boolean) && (
-              <button onClick={analyzeResponses} className="analyze-btn">
-                Analyze Codes
-              </button>
+          <>
+            <ResultsDisplay 
+              responses={responses} 
+              selectedModels={selectedModels} 
+              analysis={analysis}
+            />
+            
+            {/* Show analyze button if we have responses but no analysis */}
+            {!hasRunInitialAnalysis && !loading && 
+              Object.values(responses).some(res => res && res.trim()) && (
+                <div className="analyze-button-container">
+                  <button 
+                    onClick={() => analyzeResponses()} 
+                    className="analyze-btn"
+                    disabled={loading}
+                  >
+                    Analyze Codes
+                  </button>
+                </div>
             )}
-        
+          </>
+        )}
       </main>
     </div>
   );
