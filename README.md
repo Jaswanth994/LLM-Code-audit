@@ -1,4 +1,6 @@
 #  LLM Code Audit - Comprehensive Documentation
+### Link for Video explanation and Report 
+https://drive.google.com/drive/folders/1k2ILYgJU-peCaqjSyTahTIbDpPmsnpvK?usp=sharing
 
 **LLM Code Audit** is an intelligent, developer-focused tool designed to **generate, evaluate, and compare code** outputs from multiple Large Language Models (LLMs), including **ChatGPT**, **Gemini**, **DeepSeek**, **LLaMA**, and **Mistral**.
 
@@ -19,6 +21,7 @@ With real-time analysis, visual dashboards, and history tracking, LLM Code Audit
 7. [Detailed Page Descriptions](#detailed-page-descriptions)
 8. [Metrics Explanation](#metrics-explanation)
 9. [Conclusion](#conclusion)
+10. [Contributions](#contributions)
 
 ---
 
@@ -210,3 +213,42 @@ By offering clear comparisons, actionable insights, and in-depth metrics, this t
 >  Ready to reduce tech debt and make AI code work for you?  
 >  Try **LLM Code Audit** now!
 
+
+## Contributions 
+### Kowshik A -CS22B004
+- Release 1:
+  Ideated the core concept , Use cases and Formulated AI Metrics Assisted in implementing Large Language Models (LLMs) and contributed to the iterative process of redefining the UI/UX design. Created and refined presentation slides.
+- Release 2:
+  Conducted in-depth research to identify and refine key metrics, integrating them into the project framework. Contributed to the enhancement of the dashboard UI/UX, developed the "About" page, and authored the final four sections of the report: Discussions, Limitations, Conclusion, and Researched References to support our Formulation.
+
+### Nishchith G -CS22B021
+- Release 1:
+  Integrated multiple LLMs (OpenAI, DeepSeek, Gemini) into the system and focused on improving their code generation capabilities by analyzing outputs, fine-tuning prompts, and enhancing overall response quality for better developer utility.
+- Release 2:
+  Integrated multiple LLMs including LLaMA, and Mistral into the system. Focused on enhancing code generation quality through prompt optimization and output analysis. Additionally, resolved a critical bug related to user-submitted code handling and contributed to backend integration to ensure seamless functionality.
+
+### Jaswanth G -CS22B020
+- Release 1:
+   I actively contributed to finalizing the project idea and played a key role in drafting the initial report. I managed repository updates on GitHub, integrated Firebase for the login page, and worked on improving the overall code structure. Additionally, I was involved in identifying and fixing several bugs to ensure smoother functionality.
+
+- Release 2:
+  I redefined and added new performance metrics to improve the system's output. I successfully structured and integrated the** complete history page**, establishing a connection with the Firestore backend. I resolved issues related to the user code prompt and helped **organize and refine the codebase further**. I also wrote the final **project report **in a professional manner, created a **video demo** to showcase the app, **updated the README file** for better documentation, and continued** fixing bugs **to enhance the overall user experience.
+  
+### Rohith G -CS22B022
+- Release 1:
+I designed the Home Page and Dashboard Page. I implemented the Home Page with prompt input functionality. My work also included web platform design, hosting integration for LLMs, front-end UI development, and writing reports.
+- Release 2:
+I implemented the Home Page with prompt input, model selection, and. I added the model selection functionality to allow users to compare outputs from different LLMs like ChatGPT, Gemini, DeepSeek, LLaMA, and Mistral. I redesigned the Dashboard with a new theme and improved layout, enhancing the code analysis section with progress bars. I also updated the History Page UI to improve readability and usability. Additionally, I authored the complete README documentation, including setup instructions, metric explanations, and usage guidelines.
+
+### Rashmitha V - CS22B050
+- Release 1:
+   Integrated SonarQube Metrics & tried to fix the display of the generated report on the main website.
+Developed the login page with firebase Authentication.
+- Release 2:
+   Implemented a custom code input feature , with optional file upload support via the FileReader API to analyze Custom code along with LLMs generated codes.  Handled navigation with authentication checks via useNavigate and useLocation, dynamically constructing query parameters for Custom code comparison on the dashboard . For analysis of custom code,it is linked to same logic of LLMs generated codes analysis function and displays report.
+
+### Kalyan Anudeep - CS22B025
+- Release 1:
+  Implemented user prompt input with options for selecting models or entering manual code.Helped in Integrated multiple large language models (ChatGPT, Gemini, DeepSeek, Mistral, LLaMA).Helped in adding metrics like readability,lines of code etc which are calculated by some formulas
+- Release 2:
+  Helped in making a LaTeX-formatted technical report including system design, metric formulas, and user scenarios and the which consists all the summary of the project,,Removing bugs as if there are any errors while changing the code,Inbuilding a side-by-side model comparison dashboard with labeled outputs and integrating bar graph visualizations to display metric-wise scores across all model outputs  (code display blocks, metric cards, charts) for scalability and ease of maintenance
