@@ -145,7 +145,7 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
                 
                 <div className="progress-container">
                   <div className="progress-label">
-                    <span>Readability</span>
+                    <span>ARS (AI Readability Score)</span>
                     <span>{data.readability}/100</span>
                   </div>
                   <div className="progress-bar">
@@ -158,7 +158,7 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
 
                 <div className="progress-container">
                   <div className="progress-label">
-                    <span>Complexity</span>
+                    <span>ARF (AI Redundancy Factor)</span>
                     <span>{data.complexity}/100</span>
                   </div>
                   <div className="progress-bar">
@@ -171,7 +171,7 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
 
                 <div className="progress-container">
                   <div className="progress-label">
-                    <span>ACI</span>
+                    <span>ACI (AI Complexity Index)</span>
                     <span>{data.aci}/100</span>
                   </div>
                   <div className="progress-bar">
@@ -184,7 +184,7 @@ const ResultsDisplay = ({ responses, selectedModels, analysis }) => {
 
                 <div className="progress-container">
                   <div className="progress-label">
-                    <span>AMR</span>
+                    <span>AMR (AI Maintainability Risk )</span>
                     <span>{data.amr}/100</span>
                   </div>
                   <div className="progress-bar">
